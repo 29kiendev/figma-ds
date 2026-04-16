@@ -103,6 +103,27 @@ Font family (Arial) is fixed across all breakpoints and all roles. Binding it to
 
 `apply-styles.js` — read-only reporting script. The Figma REST API **does not support PATCH for node properties** (no way to set `textStyleId` via REST). This script reads text nodes, matches rules, and prints what *would* be applied. Actual assignment happens in the plugin.
 
+## Roadmap
+
+### Phase 1 — Token editor (LÀM TIẾP THEO)
+Tab 2 "Tokens" trong plugin UI:
+- Bảng edit inline: 8 token rows × 3 breakpoint columns (1280/1440/1920)
+- Nút **"Apply ngay"** → createTextStyles() với giá trị mới → update styles trong Figma
+- Nút **"Reset về default"** → khôi phục bảng giá trị gốc hardcoded
+- Storage: `figma.root.setPluginData('tokenData', JSON.stringify({...}))` — lưu trong file Figma, dùng chung được với team
+- Khi plugin load: đọc storage trước, fallback về hardcoded nếu chưa có data
+
+### Phase 2 — Style definitions CRUD
+- Tab Tokens mở rộng: accordion theo group (Page / Body / Form / Table / Button / Badge / Nav / Notif / Approval)
+- Mỗi style: edit name, token, weight, lh%, ls%, textCase — thêm mới / xoá
+- Reset về default cover cả SIZE_TOKENS lẫn STYLE_DEFS
+
+### Phase 3 — Multi-frame selection
+- Tab 1: thay dropdown → list checkbox multi-select
+- "Chuẩn hoá" loop qua tất cả frame đã chọn, báo cáo từng frame
+
+---
+
 ### Known limitations
 
 - `Body/Secondary`, `Input/Placeholder`, `Label/Disabled` — identical typography to their Default variants, differ only by color. Cannot be auto-assigned; must be set manually.
