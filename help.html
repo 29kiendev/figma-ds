@@ -314,6 +314,7 @@
     <a class="nav-link" href="#features">Tính năng</a>
     <a class="nav-link" href="#howto">Hướng dẫn</a>
     <a class="nav-link" href="#dev">Dành cho Dev</a>
+    <a class="nav-link" href="#tools">Công cụ kèm theo</a>
     <a class="nav-link" href="#faq">Hỏi &amp; Đáp</a>
   </div>
 </nav>
@@ -880,6 +881,107 @@
         <li>Tên CSS class (<code>.text-*</code>) ổn định → có thể dùng khắp codebase</li>
         <li>Giá trị token (<code>--size-base: 13px</code>) có thể thay đổi — đây là bình thường khi design system phát triển</li>
       </ul>
+    </div>
+  </div>
+
+  <!-- ═══ TOOLS ═══ -->
+  <div class="section">
+    <a class="section-anchor" id="tools"></a>
+    <div class="section-tag">Công cụ kèm theo</div>
+    <h2>Các file hỗ trợ trong dự án</h2>
+    <p>Ngoài plugin Figma, dự án còn có một số file tiện ích được tạo ra trong quá trình phát triển.</p>
+
+    <!-- export-chat.cjs -->
+    <div style="background:#fff;border:1px solid var(--gray-200);border-radius:12px;padding:24px;margin:24px 0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <span style="background:var(--gray-900);color:#fff;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;">export-chat.cjs</span>
+        <span style="font-size:13px;color:var(--gray-500);">Export conversation với Claude Code → Markdown + HTML</span>
+      </div>
+      <p>Script tự động đọc toàn bộ lịch sử chat với Claude Code, lọc bỏ code block, xuất ra file <code>.md</code> và <code>.html</code> đẹp để tra cứu lại các trao đổi thiết kế, quyết định kỹ thuật, hướng dẫn.</p>
+
+      <h3 style="margin-top:20px;">Cách chạy</h3>
+      <div class="code-block"><pre><span class="cm"># Bước 1: vào thư mục dự án</span>
+<span class="ck">cd</span> ~/figma-ds
+
+<span class="cm"># Bước 2: chạy script</span>
+<span class="ck">node</span> export-chat.cjs
+
+<span class="cm"># Bước 3: mở file HTML</span>
+<span class="ck">open</span> chat-export.html</pre></div>
+
+      <p style="margin-top:12px;">Output:</p>
+      <div class="code-block"><pre><span class="cv">Đang xử lý 4 file...</span>
+  efc971ce-...: <span class="cv">75</span> tin nhắn (13:10 15/04/2026)
+  9c09cfc7-...: <span class="cv">140</span> tin nhắn (08:20 16/04/2026)
+
+✓ Xuất xong:
+  chat-export.md   (<span class="cv">89KB</span>)
+  chat-export.html (<span class="cv">147KB</span>)</pre></div>
+
+      <h3 style="margin-top:20px;">Output gồm</h3>
+      <ul style="margin-left:20px;line-height:2;">
+        <li><code>chat-export.md</code> — Markdown thuần, dễ copy, dễ dán vào Notion/docs</li>
+        <li><code>chat-export.html</code> — Giao diện chat đẹp, sidebar điều hướng theo phiên, user/Claude phân biệt màu, tất cả code block đã lọc</li>
+      </ul>
+
+      <h3 style="margin-top:20px;">Mang sang dự án khác</h3>
+      <p><strong>Bước 1</strong> — Copy file:</p>
+      <div class="code-block"><pre><span class="ck">cp</span> ~/figma-ds/export-chat.cjs ~/ten-du-an-moi/export-chat.cjs</pre></div>
+
+      <p style="margin-top:12px;"><strong>Bước 2</strong> — Tìm đúng thư mục conversation của dự án mới:</p>
+      <div class="code-block"><pre><span class="ck">ls</span> ~/.claude/projects/</pre></div>
+      <p style="margin-top:8px;">Sẽ thấy các folder dạng <code>-Users-candy-ten-du-an</code> (đường dẫn project, <code>/</code> thay bằng <code>-</code>).<br>
+      Ví dụ: <code>/Users/candy/my-app</code> → folder <code>-Users-candy-my-app</code></p>
+
+      <p style="margin-top:12px;"><strong>Bước 3</strong> — Sửa dòng 17 trong <code>export-chat.cjs</code>:</p>
+      <div class="code-block"><pre><span class="cm">// Đổi từ:</span>
+<span class="ck">const</span> CHAT_DIR = path.join(process.env.HOME, <span class="cv">'.claude/projects/-Users-candy'</span>);
+
+<span class="cm">// Thành (đúng tên folder của dự án mới):</span>
+<span class="ck">const</span> CHAT_DIR = path.join(process.env.HOME, <span class="cv">'.claude/projects/-Users-candy-my-app'</span>);</pre></div>
+
+      <div class="callout" style="margin-top:16px;">
+        <strong>Lưu ý:</strong> Nếu <code>ls ~/.claude/projects/</code> chỉ có 1 folder duy nhất (<code>-Users-candy</code>), Claude Code đang lưu tất cả dự án chung — không cần đổi gì, dùng nguyên script là được.
+      </div>
+    </div>
+
+    <!-- DECISIONS.md -->
+    <div style="background:#fff;border:1px solid var(--gray-200);border-radius:12px;padding:24px;margin:24px 0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <span style="background:#7c3aed;color:#fff;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;">DECISIONS.md</span>
+        <span style="font-size:13px;color:var(--gray-500);">Ghi lại quyết định thiết kế kèm lý do</span>
+      </div>
+      <p>File markdown trong repo, ghi lại 9 quyết định kỹ thuật/thiết kế quan trọng của dự án — kèm lý do và hệ quả. Giúp team (và bản thân sau này) hiểu <em>tại sao</em> code được viết theo cách đó.</p>
+      <ul style="margin:12px 0 0 20px;line-height:2;color:var(--gray-600);">
+        <li>Plugin = nguồn sự thật duy nhất (lưu trong Figma file)</li>
+        <li>Tên token lock sớm, giá trị token thay đổi tự do</li>
+        <li>fontFamily không bind vào Figma variable</li>
+        <li>Letter spacing: Figma % → CSS em</li>
+        <li>Xoá style chỉ có hiệu lực sau khi Apply</li>
+        <li>setupVariables chạy 1 lần, autoApplyStyles loop từng frame</li>
+        <li>Responsive: 1280 default, @media min-width cho 1440/1920</li>
+        <li>Export CSS workflow — không sửa tay tokens.css</li>
+      </ul>
+    </div>
+
+    <!-- Tóm tắt những gì đã tạo -->
+    <h3 style="margin-top:28px;">Tóm tắt toàn bộ files trong dự án</h3>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>File</th><th>Mục đích</th><th>Ai dùng</th></tr></thead>
+        <tbody>
+          <tr><td><code>plugin/code.js</code></td><td>Logic plugin Figma (~600 dòng)</td><td>Plugin runtime</td></tr>
+          <tr><td><code>plugin/ui.html</code></td><td>Giao diện 2 tab của plugin</td><td>Plugin UI</td></tr>
+          <tr><td><code>plugin/manifest.json</code></td><td>Khai báo plugin cho Figma</td><td>Figma</td></tr>
+          <tr><td><code>help.html</code></td><td>Trang trợ giúp (file này)</td><td>Designer · Dev</td></tr>
+          <tr><td><code>DECISIONS.md</code></td><td>9 quyết định thiết kế kèm lý do</td><td>Team · tương lai</td></tr>
+          <tr><td><code>export-chat.cjs</code></td><td>Export conversation Claude Code → HTML/MD</td><td>Cá nhân</td></tr>
+          <tr><td><code>CLAUDE.md</code></td><td>Architecture docs cho Claude Code</td><td>AI assistant</td></tr>
+          <tr><td><code>create-variables.js</code></td><td>Tạo variable collection qua REST API</td><td>Dev (chạy 1 lần)</td></tr>
+          <tr><td><code>read-file.js</code></td><td>Phân tích text nodes trong Figma file</td><td>Dev (debug)</td></tr>
+          <tr><td><code>apply-styles.js</code></td><td>Report text style mapping (read-only)</td><td>Dev (debug)</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
