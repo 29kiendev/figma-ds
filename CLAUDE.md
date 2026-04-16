@@ -88,7 +88,7 @@ Two tabs share a group name input at the top:
 - 1 accordion: Styles — 10 sub-accordions by group (Page/Body/Form/Table/Button/Badge/Nav/Notif/Approval/Code)
   - Each style row: name input | token select | weight select | lh input | ls% input | Aa/AA case toggle | M mono toggle | ✕ delete
   - "+ Thêm style" per group
-- Footer (sticky): **Apply ngay** → saves token+style data, runs setupVariables+createTextStyles | **Reset về default** → restores both to hardcoded
+- Footer (sticky): **Apply ngay** → saves token+style data, runs setupVariables+createTextStyles | **Reset về default** → restores both to hardcoded | **Export CSS** → generates full CSS (variables + @media + `.text-*` classes) to clipboard
 
 ### Message protocol (UI ↔ plugin)
 
@@ -139,6 +139,17 @@ Full name format: `[groupName]/[Role/Variant]` e.g. `FAN Font/Body/Default`
 ### Why `fontFamily` is NOT bound to variables
 
 Font family (Arial) is fixed across all breakpoints. Binding it to a variable shows `font-family/arial` in Figma's font family field, confusing designers. Set directly on `ts.fontName` instead.
+
+### Export CSS (`generateCSS()` in ui.html)
+
+Runs entirely in the UI — no message to plugin needed. Calls `collectTokenData()` + `collectStyleData()` and generates:
+1. `:root { --size-*, --lh-*, --ls-* }` at 1280 (default)
+2. `@media (min-width: 1440px)` and `@media (min-width: 1920px)` overrides
+3. `.text-[name]` classes — name derived from `def.name.toLowerCase().replace(/\//g, '-')`
+   - e.g. `Body/Default` → `.text-body-default`, `Table/Cell-Mono` → `.text-table-cell-mono`
+4. Letter spacing from `def.ls` (Figma %) converted to `em`: `ls: 8` → `letter-spacing: 0.08em`
+
+Result is copied to clipboard via `navigator.clipboard.writeText()` with `execCommand` fallback.
 
 ### Node.js scripts
 
