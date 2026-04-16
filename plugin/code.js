@@ -106,84 +106,76 @@ function saveTokenData(data) {
   applyTokenData(data);
 }
 
-var STYLE_TO_WEIGHT = {
-  'Thin': 100, 'ExtraLight': 200, 'Light': 300,
-  'Regular': 400, 'Medium': 500,
-  'SemiBold': 600, 'DemiBold': 600,
-  'Bold': 700, 'ExtraBold': 800, 'Black': 900,
-};
+function loadStyleData() {
+  var stored = figma.root.getPluginData('styleData');
+  var data = stored ? JSON.parse(stored) : deepCopy(DEFAULT_STYLE_DEFS);
+  STYLE_DEFS = data;
+  return data;
+}
+function saveStyleData(data) {
+  STYLE_DEFS = data;
+  figma.root.setPluginData('styleData', JSON.stringify(data));
+}
 
-// Rules cho auto-apply: dùng fontName.style thay vì weight số
-// vì Plugin API trả về style string, không phải weight number
-var APPLY_RULES = [
-  { fontSize: 22, fontStyle: 'Bold',                      style: 'Display'        },
-  { fontSize: 18, fontStyle: 'Bold',                      style: 'Title'          },
-  { fontSize: 16, fontStyle: 'Bold',                      style: 'Subtitle'       },
-  { fontSize: 14, fontStyle: 'Regular', minLHPct: 150,    style: 'Lead'           },
-  { fontSize: 13, fontStyle: 'Bold',                      style: 'Body/Strong'    },
-  { fontSize: 13, fontStyle: 'Regular',                   style: 'Body/Default'   },
-  { fontSize: 11, fontStyle: 'Bold',    minLS: true,       style: 'Overline'       },
-  { fontSize: 11, fontStyle: 'Bold',                      style: 'Label/Default'  },
-  { fontSize: 11, fontStyle: 'Regular',                   style: 'Helper/Default' },
-];
-
-var STYLE_DEFS = [
+var DEFAULT_STYLE_DEFS = [
   // PAGE LEVEL
-  { name: 'Display',            token: '2xl',  weight: 600, lh: 130 },
-  { name: 'Title',              token: 'xl',   weight: 600, lh: 130 },
-  { name: 'Subtitle',           token: 'lg',   weight: 500, lh: 140 },
-  { name: 'Overline',           token: 'xs',   weight: 600, textCase: 'UPPER', ls: 8 },
+  { group: 'Page',     name: 'Display',            token: '2xl',  weight: 600, lh: 130 },
+  { group: 'Page',     name: 'Title',              token: 'xl',   weight: 600, lh: 130 },
+  { group: 'Page',     name: 'Subtitle',           token: 'lg',   weight: 500, lh: 140 },
+  { group: 'Page',     name: 'Overline',           token: 'xs',   weight: 600, textCase: 'UPPER', ls: 8 },
   // BODY
-  { name: 'Body/Default',       token: 'base', weight: 400, lh: 170 },
-  { name: 'Body/Strong',        token: 'base', weight: 600, lh: 170 },
-  { name: 'Body/Secondary',     token: 'base', weight: 400, lh: 170 },
-  { name: 'Lead',               token: 'md',   weight: 400, lh: 160 },
+  { group: 'Body',     name: 'Body/Default',       token: 'base', weight: 400, lh: 170 },
+  { group: 'Body',     name: 'Body/Strong',        token: 'base', weight: 600, lh: 170 },
+  { group: 'Body',     name: 'Body/Secondary',     token: 'base', weight: 400, lh: 170 },
+  { group: 'Body',     name: 'Lead',               token: 'md',   weight: 400, lh: 160 },
   // FORM
-  { name: 'Label/Default',      token: 'sm',   weight: 500 },
-  { name: 'Label/Required',     token: 'sm',   weight: 500 },
-  { name: 'Label/Disabled',     token: 'sm',   weight: 500 },
-  { name: 'Input/Value',        token: 'base', weight: 400 },
-  { name: 'Input/Placeholder',  token: 'base', weight: 400 },
-  { name: 'Helper/Default',     token: 'xs',   weight: 400 },
-  { name: 'Helper/Error',       token: 'xs',   weight: 400 },
-  { name: 'Helper/Success',     token: 'xs',   weight: 400 },
+  { group: 'Form',     name: 'Label/Default',      token: 'sm',   weight: 500 },
+  { group: 'Form',     name: 'Label/Required',     token: 'sm',   weight: 500 },
+  { group: 'Form',     name: 'Label/Disabled',     token: 'sm',   weight: 500 },
+  { group: 'Form',     name: 'Input/Value',        token: 'base', weight: 400 },
+  { group: 'Form',     name: 'Input/Placeholder',  token: 'base', weight: 400 },
+  { group: 'Form',     name: 'Helper/Default',     token: 'xs',   weight: 400 },
+  { group: 'Form',     name: 'Helper/Error',       token: 'xs',   weight: 400 },
+  { group: 'Form',     name: 'Helper/Success',     token: 'xs',   weight: 400 },
   // TABLE
-  { name: 'Table/Header',       token: 'xs',   weight: 600, textCase: 'UPPER', ls: 5 },
-  { name: 'Table/Cell',         token: 'sm',   weight: 400 },
-  { name: 'Table/Cell-Bold',    token: 'sm',   weight: 600 },
-  { name: 'Table/Cell-Sub',     token: 'xs',   weight: 400 },
-  { name: 'Table/Cell-Mono',    token: 'xs',   weight: 400, mono: true },
-  { name: 'Table/Footer',       token: 'xs',   weight: 500 },
+  { group: 'Table',    name: 'Table/Header',       token: 'xs',   weight: 600, textCase: 'UPPER', ls: 5 },
+  { group: 'Table',    name: 'Table/Cell',         token: 'sm',   weight: 400 },
+  { group: 'Table',    name: 'Table/Cell-Bold',    token: 'sm',   weight: 600 },
+  { group: 'Table',    name: 'Table/Cell-Sub',     token: 'xs',   weight: 400 },
+  { group: 'Table',    name: 'Table/Cell-Mono',    token: 'xs',   weight: 400, mono: true },
+  { group: 'Table',    name: 'Table/Footer',       token: 'xs',   weight: 500 },
   // BUTTON
-  { name: 'Button/Large',       token: 'md',   weight: 500, lh: 100 },
-  { name: 'Button/Default',     token: 'sm',   weight: 500, lh: 100 },
-  { name: 'Button/Small',       token: 'xs',   weight: 500, lh: 100 },
+  { group: 'Button',   name: 'Button/Large',       token: 'md',   weight: 500, lh: 100 },
+  { group: 'Button',   name: 'Button/Default',     token: 'sm',   weight: 500, lh: 100 },
+  { group: 'Button',   name: 'Button/Small',       token: 'xs',   weight: 500, lh: 100 },
   // BADGE & TAG
-  { name: 'Badge/Default',      token: 'xs',   weight: 500 },
-  { name: 'Badge/Dot',          token: 'xs',   weight: 500 },
-  { name: 'Tag',                token: 'xs',   weight: 500 },
+  { group: 'Badge',    name: 'Badge/Default',      token: 'xs',   weight: 500 },
+  { group: 'Badge',    name: 'Badge/Dot',          token: 'xs',   weight: 500 },
+  { group: 'Badge',    name: 'Tag',                token: 'xs',   weight: 500 },
   // NAVIGATION
-  { name: 'Nav/Item',           token: 'sm',   weight: 400 },
-  { name: 'Nav/Item-Active',    token: 'sm',   weight: 600 },
-  { name: 'Nav/Section',        token: 'xs',   weight: 600, textCase: 'UPPER', ls: 8 },
-  { name: 'Breadcrumb',         token: 'sm',   weight: 400 },
-  { name: 'Breadcrumb/Current', token: 'sm',   weight: 500 },
+  { group: 'Nav',      name: 'Nav/Item',           token: 'sm',   weight: 400 },
+  { group: 'Nav',      name: 'Nav/Item-Active',    token: 'sm',   weight: 600 },
+  { group: 'Nav',      name: 'Nav/Section',        token: 'xs',   weight: 600, textCase: 'UPPER', ls: 8 },
+  { group: 'Nav',      name: 'Breadcrumb',         token: 'sm',   weight: 400 },
+  { group: 'Nav',      name: 'Breadcrumb/Current', token: 'sm',   weight: 500 },
   // NOTIFICATION
-  { name: 'Notif/Title',        token: 'sm',   weight: 500 },
-  { name: 'Notif/Body',         token: 'sm',   weight: 400 },
-  { name: 'Notif/Time',         token: 'xs',   weight: 400 },
-  { name: 'Toast/Message',      token: 'sm',   weight: 400 },
-  { name: 'Tooltip',            token: 'xs',   weight: 400 },
+  { group: 'Notif',    name: 'Notif/Title',        token: 'sm',   weight: 500 },
+  { group: 'Notif',    name: 'Notif/Body',         token: 'sm',   weight: 400 },
+  { group: 'Notif',    name: 'Notif/Time',         token: 'xs',   weight: 400 },
+  { group: 'Notif',    name: 'Toast/Message',      token: 'sm',   weight: 400 },
+  { group: 'Notif',    name: 'Tooltip',            token: 'xs',   weight: 400 },
   // APPROVAL & TIMELINE
-  { name: 'Approval/Name',      token: 'base', weight: 600 },
-  { name: 'Approval/Role',      token: 'sm',   weight: 400 },
-  { name: 'Approval/Status',    token: 'sm',   weight: 500 },
-  { name: 'Approval/Comment',   token: 'base', weight: 400, lh: 170 },
-  { name: 'Approval/Date',      token: 'xs',   weight: 400, mono: true },
-  { name: 'Timeline/Step',      token: 'sm',   weight: 500 },
-  { name: 'Timeline/Desc',      token: 'xs',   weight: 400 },
-  { name: 'Code/Reference',     token: 'xs',   weight: 500, mono: true },
+  { group: 'Approval', name: 'Approval/Name',      token: 'base', weight: 600 },
+  { group: 'Approval', name: 'Approval/Role',      token: 'sm',   weight: 400 },
+  { group: 'Approval', name: 'Approval/Status',    token: 'sm',   weight: 500 },
+  { group: 'Approval', name: 'Approval/Comment',   token: 'base', weight: 400, lh: 170 },
+  { group: 'Approval', name: 'Approval/Date',      token: 'xs',   weight: 400, mono: true },
+  { group: 'Approval', name: 'Timeline/Step',      token: 'sm',   weight: 500 },
+  { group: 'Approval', name: 'Timeline/Desc',      token: 'xs',   weight: 400 },
+  // CODE
+  { group: 'Code',     name: 'Code/Reference',     token: 'xs',   weight: 500, mono: true },
 ];
+var STYLE_DEFS = []; // runtime — populated by loadStyleData on startup
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -273,68 +265,6 @@ function collectFontStyles(frame) {
   }
   walk(frame);
   return Object.keys(set);
-}
-
-// ─── Bind variables ───────────────────────────────────────────────────────────
-
-async function bindVariables(frame, varMap) {
-  var stats = { size:0, lh:0, ls:0, family:0, style:0, skip:0, err:0 };
-  var nodes = [];
-  function walk(n) {
-    if (n.type === 'TEXT') nodes.push(n);
-    if (n.children) for (var i = 0; i < n.children.length; i++) walk(n.children[i]);
-  }
-  walk(frame);
-
-  for (var i = 0; i < nodes.length; i++) {
-    var node = nodes[i];
-    var mixed = node.fontName === figma.mixed;
-    var fam = mixed
-      ? (function(){ try { return node.getRangeFontName(0,1).family; } catch(e){ return null; } })()
-      : node.fontName.family;
-    if (fam !== TARGET_FONT) { stats.skip++; continue; }
-
-    var sty = mixed
-      ? (function(){ try { return node.getRangeFontName(0,1).style; } catch(e){ return null; } })()
-      : node.fontName.style;
-    var size = node.fontSize === figma.mixed
-      ? (function(){ try { return node.getRangeFontSize(0,1); } catch(e){ return null; } })()
-      : node.fontSize;
-    if (size === null || inSkip(size)) { stats.skip++; continue; }
-
-    try {
-      if (mixed) { await figma.loadFontAsync({ family: fam, style: sty || 'Regular' }); }
-      else { await figma.loadFontAsync(node.fontName); }
-    } catch(e) { stats.err++; continue; }
-
-    var sfx = SIZE_TO_SUFFIX[size];
-    var lsKey = sfx ? SUFFIX_TO_LS[sfx] : null;
-
-    if (sfx && varMap['size/' + sfx]) {
-      try { node.setBoundVariable('fontSize', varMap['size/' + sfx]); stats.size++; } catch(e) { stats.err++; }
-    }
-    if (sfx && varMap['line-height/' + sfx]) {
-      try {
-        node.lineHeight = { value: LH_TOKENS['line-height/' + sfx]['1280'], unit: 'PIXELS' };
-        node.setBoundVariable('lineHeight', varMap['line-height/' + sfx]);
-        stats.lh++;
-      } catch(e) { stats.err++; }
-    }
-    if (lsKey && varMap[lsKey]) {
-      try {
-        node.letterSpacing = { value: LS_TOKENS[lsKey]['1280'], unit: 'PIXELS' };
-        node.setBoundVariable('letterSpacing', varMap[lsKey]);
-        stats.ls++;
-      } catch(e) { stats.err++; }
-    }
-    if (sty) {
-      var stk = 'font-style/' + sty.toLowerCase().replace(/\s+/g, '-');
-      if (varMap[stk]) {
-        try { node.setBoundVariable('fontStyle', varMap[stk]); stats.style++; } catch(e) { stats.err++; }
-      }
-    }
-  }
-  return stats;
 }
 
 // ─── Duplicate frames ─────────────────────────────────────────────────────────
@@ -479,9 +409,11 @@ async function createTextStyles(groupName, varMap) {
   for (var ei = 0; ei < existing.length; ei++) existingMap[existing[ei].name] = existing[ei];
 
   var count = 0;
+  var activeNames = {};
   for (var si = 0; si < STYLE_DEFS.length; si++) {
     var def = STYLE_DEFS[si];
     var styleName = groupName + '/' + def.name;
+    activeNames[styleName] = true;
     var ts = existingMap[styleName] || figma.createTextStyle();
     ts.name = styleName;
     ts.fontName = { family: def.mono ? FONT_MONO : TARGET_FONT, style: WEIGHT_MAP[def.weight] || 'Regular' };
@@ -493,6 +425,14 @@ async function createTextStyles(groupName, varMap) {
     ts.letterSpacing  = def.ls ? { unit: 'PERCENT', value: def.ls } : { unit: 'PERCENT', value: 0 };
     ts.textCase       = def.textCase || 'ORIGINAL';
     count++;
+  }
+  // Xoá styles thuộc groupName nhưng không còn trong STYLE_DEFS
+  var prefix = groupName + '/';
+  for (var di = 0; di < existing.length; di++) {
+    var ets = existing[di];
+    if (ets.name.indexOf(prefix) === 0 && !activeNames[ets.name]) {
+      try { ets.remove(); } catch(e) {}
+    }
   }
   return count;
 }
@@ -593,13 +533,6 @@ function autoApplyStyles(frame, groupName) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-figma.showUI(__html__, { width: 320, height: 560 });
-
-var currentTokenData = loadTokenData();
-
-figma.ui.postMessage({ type: 'frames', data: buildFrameList() });
-figma.ui.postMessage({ type: 'tokenData', data: currentTokenData });
-
 function buildFrameList() {
   var list = [];
   for (var pi = 0; pi < figma.root.children.length; pi++) {
@@ -615,6 +548,15 @@ function buildFrameList() {
   }
   return list;
 }
+
+figma.showUI(__html__, { width: 320, height: 560 });
+
+var currentTokenData = loadTokenData();
+var currentStyleData = loadStyleData();
+
+figma.ui.postMessage({ type: 'frames', data: buildFrameList() });
+figma.ui.postMessage({ type: 'tokenData', data: currentTokenData });
+figma.ui.postMessage({ type: 'styleData', data: currentStyleData });
 
 figma.ui.onmessage = async function(msg) {
   // ── Refresh frame list ───────────────────────────────────────────
@@ -632,6 +574,7 @@ figma.ui.onmessage = async function(msg) {
     try {
       currentTokenData = msg.data;
       saveTokenData(currentTokenData);
+      if (msg.styleData) { currentStyleData = msg.styleData; saveStyleData(currentStyleData); }
       var res2 = setupVariables([]);
       var cnt = await createTextStyles(msg.groupName || 'FAN Font', res2.varMap);
       figma.ui.postMessage({ type: 'tokensApplied', count: cnt });
@@ -643,46 +586,76 @@ figma.ui.onmessage = async function(msg) {
   if (msg.type === 'resetTokens') {
     currentTokenData = getDefaultTokenData();
     saveTokenData(currentTokenData);
+    currentStyleData = deepCopy(DEFAULT_STYLE_DEFS);
+    saveStyleData(currentStyleData);
     figma.ui.postMessage({ type: 'tokenData', data: currentTokenData });
+    figma.ui.postMessage({ type: 'styleData', data: currentStyleData });
     return;
   }
 
   if (msg.type !== 'run') return;
 
-  var frame = figma.getNodeById(msg.frameId);
-  if (!frame || frame.type !== 'FRAME') {
-    figma.ui.postMessage({ type: 'error', text: 'Không tìm thấy frame.' }); return;
+  var frameIds = msg.frameIds || (msg.frameId ? [msg.frameId] : []);
+  if (frameIds.length === 0) {
+    figma.ui.postMessage({ type: 'error', text: 'Chọn ít nhất 1 frame.' }); return;
   }
 
   var groupName = msg.groupName || 'FAN Font';
   var lines = [];
 
-  // ── Chuẩn hoá: variables → text styles → gán styles ──────────────────────
+  // ── Thu thập font styles từ tất cả frames được chọn ───────────────────────
+  var fontStyleSet = {};
+  for (var cfi = 0; cfi < frameIds.length; cfi++) {
+    var cf = figma.getNodeById(frameIds[cfi]);
+    if (cf) {
+      var fss = collectFontStyles(cf);
+      for (var fsi2 = 0; fsi2 < fss.length; fsi2++) fontStyleSet[fss[fsi2]] = true;
+    }
+  }
+
+  // ── Setup variables + text styles (chạy 1 lần cho tất cả frames) ──────────
   var res;
-  try { res = setupVariables(collectFontStyles(frame)); }
+  try { res = setupVariables(Object.keys(fontStyleSet)); }
   catch(e) { figma.ui.postMessage({ type: 'error', text: 'Lỗi variables: ' + e.message }); return; }
-  frame.setExplicitVariableModeForCollection(res.col, res.modeMap['1280']);
 
   var styleCount = await createTextStyles(groupName, res.varMap);
   lines.push('✓ ' + styleCount + ' text styles');
 
-  var ar = autoApplyStyles(frame, groupName);
-  var applyLine = '✓ Gán: ' + ar.applied + ' nodes';
-  if (ar.skipped > 0) {
-    var topReasons = Object.entries(ar.skipReasons)
-      .sort(function(a,b){ return b[1]-a[1]; }).slice(0,3)
-      .map(function(e){ return e[1]+'× '+e[0]; });
-    applyLine += '  ✗ bỏ qua: ' + ar.skipped + ' (' + topReasons.join(', ') + ')';
-  }
-  lines.push(applyLine);
+  // ── Gán styles từng frame ──────────────────────────────────────────────────
+  for (var fi = 0; fi < frameIds.length; fi++) {
+    var frame = figma.getNodeById(frameIds[fi]);
+    if (!frame || frame.type !== 'FRAME') {
+      lines.push('✗ Frame #' + (fi + 1) + ': không tìm thấy'); continue;
+    }
+    frame.setExplicitVariableModeForCollection(res.col, res.modeMap['1280']);
+    var ar = autoApplyStyles(frame, groupName);
 
-  // ── Duplicate (tuỳ chọn) ─────────────────────────────────────────────────
+    if (frameIds.length === 1) {
+      var applyLine = '✓ Gán: ' + ar.applied + ' nodes';
+      if (ar.skipped > 0) {
+        var topReasons = Object.entries(ar.skipReasons)
+          .sort(function(a,b){ return b[1]-a[1]; }).slice(0,3)
+          .map(function(e){ return e[1]+'× '+e[0]; });
+        applyLine += '  ✗ bỏ qua: ' + ar.skipped + ' (' + topReasons.join(', ') + ')';
+      }
+      lines.push(applyLine);
+    } else {
+      var fLine = '[' + frame.name + '] ✓' + ar.applied + ' node';
+      if (ar.skipped > 0) fLine += ' ✗' + ar.skipped;
+      lines.push(fLine);
+    }
+  }
+
+  // ── Duplicate (áp dụng cho frame đầu tiên) ────────────────────────────────
   if (msg.duplicate && msg.breakpoints.length > 0) {
-    var cloned = duplicateFrames(frame, res.col, res.modeMap, msg.breakpoints);
-    if (cloned.length > 0) lines.push('✓ Frames: ' + cloned.join(', '));
+    var srcFrame = figma.getNodeById(frameIds[0]);
+    if (srcFrame && srcFrame.type === 'FRAME') {
+      var cloned = duplicateFrames(srcFrame, res.col, res.modeMap, msg.breakpoints);
+      if (cloned.length > 0) lines.push('✓ Frames: ' + cloned.join(', '));
+    }
   }
 
-  // ── Guideline (tuỳ chọn) ─────────────────────────────────────────────────
+  // ── Guideline ─────────────────────────────────────────────────────────────
   if (msg.guideline) {
     await createGuideline(msg.sampleText || 'Ag');
     lines.push('✓ Guidelines đã tạo');

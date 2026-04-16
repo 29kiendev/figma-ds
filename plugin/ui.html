@@ -38,26 +38,47 @@
 
   /* ─── Tab content ─── */
   .tab-content { display: none; }
-  .tab-content.active { display: block; }
+  .tab-content.active { display: flex; flex-direction: column; }
 
   /* ─── Tab 1 ─── */
-  #tab1 { padding: 14px 16px; }
+  #tab1 { padding: 14px 16px; max-height: 460px; overflow-y: auto; }
+  .section-title-row {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+  }
   .section-title {
     font-size: 11px; font-weight: bold; color: #666;
-    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.5px;
   }
-  .section { margin-bottom: 14px; }
-  .frame-row { display: flex; gap: 6px; align-items: center; }
-  .frame-row select { flex: 1; }
+  .frame-actions { display: flex; align-items: center; gap: 6px; }
+  .sel-all-btn {
+    font-size: 11px; color: #3b82f6; border: none; background: none; cursor: pointer; padding: 0;
+  }
+  .sel-all-btn:hover { text-decoration: underline; }
   .refresh-btn {
-    flex-shrink: 0; width: 30px; height: 30px; border: 1px solid #ddd;
-    border-radius: 6px; background: #fafafa; cursor: pointer;
-    font-size: 14px; display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s; color: #555;
+    width: 22px; height: 22px; border: 1px solid #ddd; border-radius: 4px;
+    background: #fafafa; cursor: pointer; font-size: 12px; color: #666; padding: 0;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s;
   }
   .refresh-btn:hover { background: #f0f0f0; border-color: #bbb; }
   .refresh-btn.spinning { animation: spin 0.6s linear; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .frame-list {
+    border: 1px solid #ddd; border-radius: 6px; max-height: 112px; overflow-y: auto; background: #fafafa;
+  }
+  .frame-item {
+    display: flex; align-items: center; gap: 6px; padding: 5px 8px;
+    cursor: pointer; user-select: none; border-bottom: 1px solid #f0f0f0;
+  }
+  .frame-item:last-child { border-bottom: none; }
+  .frame-item:hover { background: #f0f6ff; }
+  .frame-item.selected { background: #eff6ff; }
+  .frame-item input[type="checkbox"] {
+    pointer-events: none; accent-color: #3b82f6; flex-shrink: 0; width: 13px; height: 13px;
+  }
+  .frame-item-name { flex: 1; font-size: 12px; color: #1a1a1a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .frame-item-size { font-size: 10px; color: #bbb; flex-shrink: 0; }
+  .frame-sel-count { font-size: 11px; color: #888; margin-top: 4px; min-height: 14px; }
+  .section { margin-bottom: 14px; }
   select {
     width: 100%; padding: 7px 8px; border: 1px solid #ddd;
     border-radius: 6px; font-size: 12px; background: #fafafa;
@@ -105,8 +126,10 @@
   .hidden { display: none; }
 
   /* ─── Tab 2 ─── */
-  #tab2 { overflow-y: auto; max-height: 450px; }
+  #tab2 { max-height: 460px; }
+  #tab2-scroll { flex: 1; overflow-y: auto; min-height: 0; }
 
+  /* Main accordions */
   .accordion { border-bottom: 1px solid #e5e7eb; }
   .accordion-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -122,6 +145,7 @@
   .accordion-body { display: none; padding: 4px 16px 12px; }
   .accordion.open .accordion-body { display: block; }
 
+  /* Token table */
   .tok-table { width: 100%; border-collapse: collapse; }
   .tok-table th {
     font-size: 10px; font-weight: bold; color: #9ca3af;
@@ -138,17 +162,90 @@
   .tok-input {
     width: 52px; padding: 4px 4px; border: 1px solid #ddd;
     border-radius: 5px; font-size: 12px; text-align: center;
-    outline: none; color: #111; background: #fff;
-    -moz-appearance: textfield;
+    outline: none; color: #111; background: #fff; -moz-appearance: textfield;
   }
   .tok-input::-webkit-inner-spin-button,
   .tok-input::-webkit-outer-spin-button { -webkit-appearance: none; }
   .tok-input:focus { border-color: #3b82f6; }
 
+  /* ─── Style sub-accordions ─── */
+  .acc-styles-body { padding: 0; }
+  .style-group { border-top: 1px solid #f0f0f0; }
+  .sg-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 16px; cursor: pointer; user-select: none; background: #fff;
+  }
+  .sg-header:hover { background: #f9fafb; }
+  .sg-title { font-size: 11px; font-weight: bold; color: #6b7280; }
+  .sg-count {
+    font-size: 10px; color: #9ca3af; background: #f3f4f6;
+    border-radius: 10px; padding: 1px 6px; margin-right: 4px;
+  }
+  .sg-right { display: flex; align-items: center; gap: 4px; }
+  .sg-icon { font-size: 11px; color: #d1d5db; transition: transform 0.15s; }
+  .style-group.open .sg-icon { transform: rotate(180deg); }
+  .sg-body { display: none; padding: 4px 0 6px; }
+  .style-group.open .sg-body { display: block; }
+
+  /* Style row */
+  .style-row { padding: 5px 16px; border-bottom: 1px solid #f5f5f5; }
+  .style-row:last-of-type { border-bottom: none; }
+  .sr-top { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+  .sr-name {
+    flex: 1; padding: 4px 6px; border: 1px solid #e5e7eb;
+    border-radius: 5px; font-size: 12px; outline: none; color: #111; min-width: 0;
+  }
+  .sr-name:focus { border-color: #3b82f6; }
+  .sr-mono {
+    flex-shrink: 0; width: 24px; height: 24px; border: 1px solid #e5e7eb;
+    border-radius: 4px; background: #fafafa; cursor: pointer;
+    font-size: 11px; font-weight: bold; color: #9ca3af;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Courier New', monospace;
+  }
+  .sr-mono.active { background: #eff6ff; border-color: #93c5fd; color: #2563eb; }
+  .sr-del {
+    flex-shrink: 0; width: 24px; height: 24px; border: 1px solid #fee2e2;
+    border-radius: 4px; background: #fef2f2; cursor: pointer; font-size: 11px; color: #ef4444;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sr-del:hover { background: #fecaca; }
+  .sr-bot { display: flex; align-items: center; gap: 3px; }
+  .sr-token {
+    width: 58px; padding: 3px 2px; border: 1px solid #e5e7eb;
+    border-radius: 5px; font-size: 11px; color: #374151; background: #fff; outline: none; cursor: pointer;
+  }
+  .sr-token:focus { border-color: #3b82f6; }
+  .sr-weight {
+    width: 48px; padding: 3px 2px; border: 1px solid #e5e7eb;
+    border-radius: 5px; font-size: 11px; color: #374151; background: #fff; outline: none; cursor: pointer;
+  }
+  .sr-weight:focus { border-color: #3b82f6; }
+  .sr-lh, .sr-ls {
+    width: 40px; padding: 3px 4px; border: 1px solid #e5e7eb;
+    border-radius: 5px; font-size: 11px; text-align: center;
+    outline: none; color: #111; background: #fff; -moz-appearance: textfield;
+  }
+  .sr-lh::-webkit-inner-spin-button, .sr-lh::-webkit-outer-spin-button,
+  .sr-ls::-webkit-inner-spin-button, .sr-ls::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .sr-lh:focus, .sr-ls:focus { border-color: #3b82f6; }
+  .sr-case {
+    flex: 1; min-width: 0; padding: 3px 0; border: 1px solid #e5e7eb;
+    border-radius: 5px; font-size: 10px; font-weight: bold; color: #9ca3af;
+    background: #fafafa; cursor: pointer; text-align: center;
+  }
+  .sr-case.active { background: #eff6ff; border-color: #93c5fd; color: #2563eb; }
+  .sg-add {
+    display: block; width: calc(100% - 32px); margin: 6px 16px 2px;
+    padding: 5px; border: 1px dashed #d1d5db; border-radius: 6px;
+    font-size: 11px; color: #9ca3af; background: none; cursor: pointer; text-align: center;
+  }
+  .sg-add:hover { border-color: #3b82f6; color: #3b82f6; background: #f0f7ff; }
+
+  /* Footer */
   .tok-footer {
-    padding: 10px 16px; display: flex; gap: 8px;
+    flex-shrink: 0; padding: 10px 16px; display: flex; gap: 8px;
     background: #fff; border-top: 1px solid #e5e7eb;
-    position: sticky; bottom: 0;
   }
   .tok-footer button {
     flex: 1; padding: 8px; border: none; border-radius: 7px;
@@ -160,7 +257,7 @@
   #reset-btn { background: #f3f4f6; color: #374151; }
   #reset-btn:hover { background: #e5e7eb; }
   #tok-status {
-    padding: 0 16px 10px; font-size: 11px; color: #666;
+    flex-shrink: 0; padding: 0 16px 10px; font-size: 11px; color: #666;
     text-align: center; min-height: 14px; line-height: 1.5;
   }
 </style>
@@ -184,20 +281,27 @@
 
 <!-- ─── Tab 1: Chuẩn hoá ─── -->
 <div id="tab1" class="tab-content active">
+
+  <!-- Frame multi-select -->
   <div class="section">
-    <div class="section-title">Frame</div>
-    <div class="frame-row">
-      <select id="frame-select">
-        <option value="">Đang tải danh sách frame...</option>
-      </select>
-      <button class="refresh-btn" id="refresh-btn" onclick="refreshFrames()" title="Làm mới danh sách frame">↻</button>
+    <div class="section-title-row">
+      <span class="section-title">Frame</span>
+      <div class="frame-actions">
+        <button class="sel-all-btn" id="sel-all-btn" onclick="toggleSelectAll()">Chọn tất cả</button>
+        <button class="refresh-btn" id="refresh-btn" onclick="refreshFrames()" title="Làm mới danh sách">↻</button>
+      </div>
     </div>
+    <div class="frame-list" id="frame-list">
+      <div style="padding:7px 10px;color:#bbb;font-size:11px;">Đang tải...</div>
+    </div>
+    <div class="frame-sel-count" id="frame-sel-count"></div>
   </div>
 
   <hr class="divider">
 
+  <!-- Tuỳ chọn -->
   <div class="section">
-    <div class="section-title">Tuỳ chọn</div>
+    <div class="section-title" style="margin-bottom:6px;">Tuỳ chọn</div>
 
     <div class="checkbox-row" onclick="toggle('action-dup')">
       <input type="checkbox" id="action-dup">
@@ -230,47 +334,60 @@
 <!-- ─── Tab 2: Tokens ─── -->
 <div id="tab2" class="tab-content">
 
-  <!-- Font Size -->
-  <div class="accordion open" id="acc-size">
-    <div class="accordion-header" onclick="toggleAcc('acc-size')">
-      <span class="accordion-title">Font Size (px)</span>
-      <span class="accordion-icon">▾</span>
-    </div>
-    <div class="accordion-body">
-      <table class="tok-table">
-        <thead><tr><th>Token</th><th>1280</th><th>1440</th><th>1920</th></tr></thead>
-        <tbody id="size-rows"></tbody>
-      </table>
-    </div>
-  </div>
+  <div id="tab2-scroll">
 
-  <!-- Line Height -->
-  <div class="accordion" id="acc-lh">
-    <div class="accordion-header" onclick="toggleAcc('acc-lh')">
-      <span class="accordion-title">Line Height (px)</span>
-      <span class="accordion-icon">▾</span>
+    <!-- Font Size -->
+    <div class="accordion open" id="acc-size">
+      <div class="accordion-header" onclick="toggleAcc('acc-size')">
+        <span class="accordion-title">Font Size (px)</span>
+        <span class="accordion-icon">▾</span>
+      </div>
+      <div class="accordion-body">
+        <table class="tok-table">
+          <thead><tr><th>Token</th><th>1280</th><th>1440</th><th>1920</th></tr></thead>
+          <tbody id="size-rows"></tbody>
+        </table>
+      </div>
     </div>
-    <div class="accordion-body">
-      <table class="tok-table">
-        <thead><tr><th>Token</th><th>1280</th><th>1440</th><th>1920</th></tr></thead>
-        <tbody id="lh-rows"></tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- Letter Spacing -->
-  <div class="accordion" id="acc-ls">
-    <div class="accordion-header" onclick="toggleAcc('acc-ls')">
-      <span class="accordion-title">Letter Spacing (px)</span>
-      <span class="accordion-icon">▾</span>
+    <!-- Line Height -->
+    <div class="accordion" id="acc-lh">
+      <div class="accordion-header" onclick="toggleAcc('acc-lh')">
+        <span class="accordion-title">Line Height (px)</span>
+        <span class="accordion-icon">▾</span>
+      </div>
+      <div class="accordion-body">
+        <table class="tok-table">
+          <thead><tr><th>Token</th><th>1280</th><th>1440</th><th>1920</th></tr></thead>
+          <tbody id="lh-rows"></tbody>
+        </table>
+      </div>
     </div>
-    <div class="accordion-body">
-      <table class="tok-table">
-        <thead><tr><th>Token</th><th>1280</th><th>1440</th><th>1920</th></tr></thead>
-        <tbody id="ls-rows"></tbody>
-      </table>
+
+    <!-- Letter Spacing -->
+    <div class="accordion" id="acc-ls">
+      <div class="accordion-header" onclick="toggleAcc('acc-ls')">
+        <span class="accordion-title">Letter Spacing (px)</span>
+        <span class="accordion-icon">▾</span>
+      </div>
+      <div class="accordion-body">
+        <table class="tok-table">
+          <thead><tr><th>Token</th><th>1280</th><th>1440</th><th>1920</th></tr></thead>
+          <tbody id="ls-rows"></tbody>
+        </table>
+      </div>
     </div>
-  </div>
+
+    <!-- Styles -->
+    <div class="accordion" id="acc-styles">
+      <div class="accordion-header" onclick="toggleAcc('acc-styles')">
+        <span class="accordion-title" id="acc-styles-title">Styles</span>
+        <span class="accordion-icon">▾</span>
+      </div>
+      <div class="accordion-body acc-styles-body" id="styles-body"></div>
+    </div>
+
+  </div><!-- #tab2-scroll -->
 
   <!-- Footer -->
   <div class="tok-footer">
@@ -286,6 +403,11 @@
   var LH_KEYS   = ['2xs','xs','sm','base','md','lg','xl','2xl'];
   var LS_KEYS   = ['0','tight','tighter'];
   var BPS = ['1280','1440','1920'];
+  var SIZE_TOKEN_OPTS = ['2xs','xs','sm','base','md','lg','xl','2xl'];
+  var WEIGHT_OPTS = [400, 500, 600];
+  var STYLE_GROUP_ORDER = ['Page','Body','Form','Table','Button','Badge','Nav','Notif','Approval','Code'];
+
+  var prevSelectedIds = {}; // lưu selection trước khi refresh
 
   // ─── Tab switching ────────────────────────────────────────────────
   function switchTab(n) {
@@ -296,12 +418,145 @@
   }
 
   // ─── Accordion ────────────────────────────────────────────────────
-  function toggleAcc(id) {
-    document.getElementById(id).classList.toggle('open');
+  function toggleAcc(id) { document.getElementById(id).classList.toggle('open'); }
+  function toggleSG(el) { el.closest('.style-group').classList.toggle('open'); }
+
+  // ─── Frame list ────────────────────────────────────────────────────
+  function populateFrames(data) {
+    var list = document.getElementById('frame-list');
+    list.innerHTML = '';
+
+    if (data.length === 0) {
+      list.innerHTML = '<div style="padding:7px 10px;color:#bbb;font-size:11px;">Không tìm thấy frame</div>';
+      updateSelCount(); return;
+    }
+
+    var hasPrev = Object.keys(prevSelectedIds).length > 0;
+    data.forEach(function(f) {
+      var item = document.createElement('div');
+      item.className = 'frame-item';
+      item.dataset.id = f.id;
+
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+
+      var nameSpan = document.createElement('span');
+      nameSpan.className = 'frame-item-name';
+      nameSpan.textContent = (data.length > 5 ? '[' + f.page + '] ' : '') + f.name;
+
+      var sizeSpan = document.createElement('span');
+      sizeSpan.className = 'frame-item-size';
+      sizeSpan.textContent = f.w + '×' + f.h;
+
+      item.appendChild(cb); item.appendChild(nameSpan); item.appendChild(sizeSpan);
+      item.onclick = function() {
+        cb.checked = !cb.checked;
+        item.classList.toggle('selected', cb.checked);
+        updateSelCount();
+      };
+
+      var shouldSelect = hasPrev ? !!prevSelectedIds[f.id] : (f.name === '1280');
+      if (shouldSelect) { cb.checked = true; item.classList.add('selected'); }
+
+      list.appendChild(item);
+    });
+
+    // Nếu không có gì được chọn sau khi restore, chọn item đầu tiên
+    if (!document.querySelector('.frame-item.selected') && data.length > 0) {
+      var first = list.querySelector('.frame-item');
+      if (first) { first.querySelector('input').checked = true; first.classList.add('selected'); }
+    }
+
+    prevSelectedIds = {};
+    updateSelCount();
   }
 
-  // ─── Build token table rows ───────────────────────────────────────
-  function buildRows(tbodyId, keys, prefix, isFloat) {
+  function updateSelCount() {
+    var total = document.querySelectorAll('.frame-item').length;
+    var selected = document.querySelectorAll('.frame-item.selected').length;
+    var countEl = document.getElementById('frame-sel-count');
+    if (total === 0) { countEl.textContent = ''; return; }
+    countEl.textContent = selected + ' / ' + total + ' frame đã chọn';
+    var btn = document.getElementById('sel-all-btn');
+    btn.textContent = (selected === total && total > 0) ? 'Bỏ chọn tất cả' : 'Chọn tất cả';
+  }
+
+  function toggleSelectAll() {
+    var items = document.querySelectorAll('.frame-item');
+    var selected = document.querySelectorAll('.frame-item.selected').length;
+    var doSelect = selected < items.length;
+    items.forEach(function(item) {
+      item.querySelector('input').checked = doSelect;
+      item.classList.toggle('selected', doSelect);
+    });
+    updateSelCount();
+  }
+
+  function refreshFrames() {
+    var btn = document.getElementById('refresh-btn');
+    btn.classList.add('spinning');
+    prevSelectedIds = {};
+    document.querySelectorAll('.frame-item.selected').forEach(function(item) {
+      prevSelectedIds[item.dataset.id] = true;
+    });
+    parent.postMessage({ pluginMessage: { type: 'getFrames' } }, '*');
+    setTimeout(function() { btn.classList.remove('spinning'); }, 600);
+  }
+
+  // ─── Tab 1 helpers ────────────────────────────────────────────────
+  function toggle(id) {
+    var el = document.getElementById(id);
+    el.checked = !el.checked;
+    if (id === 'action-guide') document.getElementById('sample-group').classList.toggle('hidden', !el.checked);
+    if (id === 'action-dup')   document.getElementById('bp-group').classList.toggle('hidden', !el.checked);
+  }
+
+  function toggleChip(bp) {
+    var cb = document.getElementById('bp-' + bp);
+    var chip = document.getElementById('chip-' + bp);
+    cb.checked = !cb.checked;
+    chip.classList.toggle('active', cb.checked);
+  }
+
+  function run() {
+    var frameIds = [];
+    document.querySelectorAll('.frame-item.selected').forEach(function(item) {
+      frameIds.push(item.dataset.id);
+    });
+    if (frameIds.length === 0) { setStatus('Chọn ít nhất 1 frame', 'error'); return; }
+
+    var breakpoints = [];
+    ['1440','1920'].forEach(function(bp) {
+      if (document.getElementById('bp-' + bp).checked) breakpoints.push(bp);
+    });
+    var btn = document.getElementById('run-btn');
+    btn.disabled = true; btn.textContent = 'Đang xử lý...';
+    setStatus('');
+    parent.postMessage({ pluginMessage: {
+      type:        'run',
+      frameIds:    frameIds,
+      groupName:   document.getElementById('group-name').value.trim() || 'FAN Font',
+      duplicate:   document.getElementById('action-dup').checked,
+      breakpoints: breakpoints,
+      guideline:   document.getElementById('action-guide').checked,
+      sampleText:  document.getElementById('sample-text').value.trim() || 'Ag',
+    }}, '*');
+  }
+
+  function setStatus(msg, cls) {
+    var el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = cls === 'error' ? 'status-error' : cls === 'success' ? 'status-success' : '';
+  }
+
+  function setTokStatus(msg, cls) {
+    var el = document.getElementById('tok-status');
+    el.textContent = msg;
+    el.className = cls === 'error' ? 'status-error' : cls === 'success' ? 'status-success' : '';
+  }
+
+  // ─── Token tables ─────────────────────────────────────────────────
+  function buildTokenRows(tbodyId, keys, prefix, isFloat) {
     var tbody = document.getElementById(tbodyId);
     keys.forEach(function(key) {
       var tr = document.createElement('tr');
@@ -311,19 +566,14 @@
       BPS.forEach(function(bp) {
         var td = document.createElement('td');
         var inp = document.createElement('input');
-        inp.type = 'number';
-        inp.step = isFloat ? '0.1' : '1';
-        inp.className = 'tok-input';
-        inp.id = prefix + '-' + key + '-' + bp;
-        inp.value = '0';
-        td.appendChild(inp);
-        tr.appendChild(td);
+        inp.type = 'number'; inp.step = isFloat ? '0.1' : '1';
+        inp.className = 'tok-input'; inp.id = prefix + '-' + key + '-' + bp; inp.value = '0';
+        td.appendChild(inp); tr.appendChild(td);
       });
       tbody.appendChild(tr);
     });
   }
 
-  // ─── Populate tables with token data ─────────────────────────────
   function populateTokenData(data) {
     SIZE_KEYS.forEach(function(key) {
       BPS.forEach(function(bp) {
@@ -345,7 +595,6 @@
     });
   }
 
-  // ─── Collect token data from UI ───────────────────────────────────
   function collectTokenData() {
     var data = { size: {}, lh: {}, ls: {} };
     SIZE_KEYS.forEach(function(key) {
@@ -372,105 +621,197 @@
     return data;
   }
 
-  // ─── Apply tokens ─────────────────────────────────────────────────
+  // ─── Style CRUD ────────────────────────────────────────────────────
+  function makeSelect(className, opts, selected) {
+    var sel = document.createElement('select');
+    sel.className = className;
+    opts.forEach(function(o) {
+      var opt = document.createElement('option');
+      opt.value = o; opt.textContent = o;
+      if (o == selected) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    return sel;
+  }
+
+  function createStyleRow(def) {
+    var row = document.createElement('div');
+    row.className = 'style-row';
+
+    var top = document.createElement('div');
+    top.className = 'sr-top';
+
+    var nameInp = document.createElement('input');
+    nameInp.type = 'text'; nameInp.className = 'sr-name';
+    nameInp.value = def.name || ''; nameInp.placeholder = 'Tên style';
+
+    var monoBtn = document.createElement('button');
+    monoBtn.className = 'sr-mono' + (def.mono ? ' active' : '');
+    monoBtn.textContent = 'M'; monoBtn.title = 'Monospace'; monoBtn.type = 'button';
+    monoBtn.onclick = function() { monoBtn.classList.toggle('active'); };
+
+    var delBtn = document.createElement('button');
+    delBtn.className = 'sr-del'; delBtn.textContent = '✕'; delBtn.type = 'button';
+    delBtn.onclick = function() {
+      var grpEl = row.closest('.style-group');
+      row.remove();
+      updateGroupCount(grpEl);
+      updateStylesTitle();
+    };
+
+    top.appendChild(nameInp); top.appendChild(monoBtn); top.appendChild(delBtn);
+
+    var bot = document.createElement('div');
+    bot.className = 'sr-bot';
+
+    var tokenSel = makeSelect('sr-token', SIZE_TOKEN_OPTS, def.token || 'base');
+    var weightSel = makeSelect('sr-weight', WEIGHT_OPTS, def.weight || 400);
+
+    var lhInp = document.createElement('input');
+    lhInp.type = 'number'; lhInp.className = 'sr-lh';
+    lhInp.placeholder = 'lh'; lhInp.min = '0'; lhInp.max = '300';
+    lhInp.value = def.lh ? def.lh : '';
+    lhInp.title = 'Line height % (trống = auto)';
+
+    var lsInp = document.createElement('input');
+    lsInp.type = 'number'; lsInp.className = 'sr-ls';
+    lsInp.placeholder = 'ls%'; lsInp.step = '1';
+    lsInp.value = def.ls !== undefined ? def.ls : '0';
+    lsInp.title = 'Letter spacing %';
+
+    var isUpper = def.textCase === 'UPPER';
+    var caseBtn = document.createElement('button');
+    caseBtn.className = 'sr-case' + (isUpper ? ' active' : '');
+    caseBtn.dataset.case = isUpper ? 'UPPER' : 'ORIGINAL';
+    caseBtn.textContent = isUpper ? 'AA' : 'Aa';
+    caseBtn.type = 'button';
+    caseBtn.title = 'Aa = thường, AA = UPPER';
+    caseBtn.onclick = function() {
+      var u = caseBtn.dataset.case === 'UPPER';
+      caseBtn.dataset.case = u ? 'ORIGINAL' : 'UPPER';
+      caseBtn.textContent = u ? 'Aa' : 'AA';
+      caseBtn.classList.toggle('active', !u);
+    };
+
+    bot.appendChild(tokenSel); bot.appendChild(weightSel);
+    bot.appendChild(lhInp); bot.appendChild(lsInp); bot.appendChild(caseBtn);
+    row.appendChild(top); row.appendChild(bot);
+    return row;
+  }
+
+  function updateGroupCount(sgEl) {
+    if (!sgEl) return;
+    var count = sgEl.querySelectorAll('.style-row').length;
+    var badge = sgEl.querySelector('.sg-count');
+    if (badge) badge.textContent = count;
+  }
+
+  function updateStylesTitle() {
+    var total = document.querySelectorAll('.style-row').length;
+    document.getElementById('acc-styles-title').textContent = 'Styles (' + total + ')';
+  }
+
+  function buildStylesUI(data) {
+    var groups = {};
+    STYLE_GROUP_ORDER.forEach(function(g) { groups[g] = []; });
+    data.forEach(function(def) {
+      var g = def.group || 'Page';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(def);
+    });
+
+    var container = document.getElementById('styles-body');
+    container.innerHTML = '';
+
+    STYLE_GROUP_ORDER.forEach(function(groupName, gi) {
+      var defs = groups[groupName] || [];
+      var sg = document.createElement('div');
+      sg.className = 'style-group' + (gi === 0 ? ' open' : '');
+      sg.dataset.group = groupName;
+
+      var hdr = document.createElement('div');
+      hdr.className = 'sg-header';
+      hdr.onclick = function() { toggleSG(hdr); };
+
+      var title = document.createElement('span');
+      title.className = 'sg-title'; title.textContent = groupName;
+
+      var right = document.createElement('span');
+      right.className = 'sg-right';
+      var badge = document.createElement('span');
+      badge.className = 'sg-count'; badge.textContent = defs.length;
+      var icon = document.createElement('span');
+      icon.className = 'sg-icon'; icon.textContent = '▾';
+
+      right.appendChild(badge); right.appendChild(icon);
+      hdr.appendChild(title); hdr.appendChild(right);
+      sg.appendChild(hdr);
+
+      var body = document.createElement('div');
+      body.className = 'sg-body';
+      defs.forEach(function(def) { body.appendChild(createStyleRow(def)); });
+
+      var addBtn = document.createElement('button');
+      addBtn.className = 'sg-add'; addBtn.textContent = '+ Thêm style'; addBtn.type = 'button';
+      addBtn.onclick = (function(grp, bd, sgEl) {
+        return function() {
+          var newRow = createStyleRow({ group: grp, name: '', token: 'base', weight: 400 });
+          bd.insertBefore(newRow, addBtn);
+          newRow.querySelector('.sr-name').focus();
+          updateGroupCount(sgEl);
+          updateStylesTitle();
+        };
+      })(groupName, body, sg);
+
+      body.appendChild(addBtn);
+      sg.appendChild(body);
+      container.appendChild(sg);
+    });
+
+    updateStylesTitle();
+  }
+
+  function collectStyleData() {
+    var data = [];
+    document.querySelectorAll('.style-group').forEach(function(sg) {
+      var grp = sg.dataset.group;
+      sg.querySelectorAll('.style-row').forEach(function(row) {
+        var name = row.querySelector('.sr-name').value.trim();
+        if (!name) return;
+        var def = {
+          group: grp,
+          name: name,
+          token: row.querySelector('.sr-token').value,
+          weight: parseInt(row.querySelector('.sr-weight').value),
+        };
+        var lhVal = parseFloat(row.querySelector('.sr-lh').value);
+        if (!isNaN(lhVal) && lhVal > 0) def.lh = lhVal;
+        var lsVal = parseFloat(row.querySelector('.sr-ls').value);
+        if (!isNaN(lsVal) && lsVal !== 0) def.ls = lsVal;
+        var caseBtn = row.querySelector('.sr-case');
+        if (caseBtn.dataset.case === 'UPPER') def.textCase = 'UPPER';
+        if (row.querySelector('.sr-mono').classList.contains('active')) def.mono = true;
+        data.push(def);
+      });
+    });
+    return data;
+  }
+
+  // ─── Apply / Reset ────────────────────────────────────────────────
   function applyTokens() {
     var btn = document.getElementById('apply-btn');
-    btn.disabled = true;
-    btn.textContent = 'Đang xử lý...';
+    btn.disabled = true; btn.textContent = 'Đang xử lý...';
     setTokStatus('');
     parent.postMessage({ pluginMessage: {
-      type: 'applyTokens',
-      data: collectTokenData(),
+      type:      'applyTokens',
+      data:      collectTokenData(),
+      styleData: collectStyleData(),
       groupName: document.getElementById('group-name').value.trim() || 'FAN Font',
     }}, '*');
   }
 
-  // ─── Reset tokens ─────────────────────────────────────────────────
   function resetTokens() {
     parent.postMessage({ pluginMessage: { type: 'resetTokens' } }, '*');
-  }
-
-  // ─── Refresh frame list ───────────────────────────────────────────
-  function refreshFrames() {
-    var btn = document.getElementById('refresh-btn');
-    btn.classList.add('spinning');
-    parent.postMessage({ pluginMessage: { type: 'getFrames' } }, '*');
-    setTimeout(function() { btn.classList.remove('spinning'); }, 600);
-  }
-
-  function populateFrames(data) {
-    var sel = document.getElementById('frame-select');
-    var prev = sel.value;
-    sel.innerHTML = '';
-    if (data.length === 0) {
-      sel.innerHTML = '<option value="">Không tìm thấy frame</option>';
-      return;
-    }
-    data.forEach(function(f) {
-      var opt = document.createElement('option');
-      opt.value = f.id;
-      opt.textContent = (data.length > 5 ? '[' + f.page + '] ' : '') + f.name + '  (' + f.w + '×' + f.h + ')';
-      sel.appendChild(opt);
-    });
-    // Giữ lại selection cũ nếu frame vẫn còn tồn tại
-    if (prev) sel.value = prev;
-    if (!sel.value && data.length > 0) {
-      var def = data.find(function(f) { return f.name === '1280'; });
-      sel.value = def ? def.id : data[0].id;
-    }
-  }
-
-  // ─── Tab 1 helpers ────────────────────────────────────────────────
-  function toggle(id) {
-    var el = document.getElementById(id);
-    el.checked = !el.checked;
-    if (id === 'action-guide') {
-      document.getElementById('sample-group').classList.toggle('hidden', !el.checked);
-    }
-    if (id === 'action-dup') {
-      document.getElementById('bp-group').classList.toggle('hidden', !el.checked);
-    }
-  }
-
-  function toggleChip(bp) {
-    var cb = document.getElementById('bp-' + bp);
-    var chip = document.getElementById('chip-' + bp);
-    cb.checked = !cb.checked;
-    chip.classList.toggle('active', cb.checked);
-  }
-
-  function run() {
-    var frameId = document.getElementById('frame-select').value;
-    if (!frameId) { setStatus('Chọn frame trước', 'error'); return; }
-    var breakpoints = [];
-    ['1440','1920'].forEach(function(bp) {
-      if (document.getElementById('bp-' + bp).checked) breakpoints.push(bp);
-    });
-    var btn = document.getElementById('run-btn');
-    btn.disabled = true;
-    btn.textContent = 'Đang xử lý...';
-    setStatus('');
-    parent.postMessage({ pluginMessage: {
-      type:       'run',
-      frameId:    frameId,
-      groupName:  document.getElementById('group-name').value.trim() || 'FAN Font',
-      duplicate:  document.getElementById('action-dup').checked,
-      breakpoints: breakpoints,
-      guideline:  document.getElementById('action-guide').checked,
-      sampleText: document.getElementById('sample-text').value.trim() || 'Ag',
-    }}, '*');
-  }
-
-  function setStatus(msg, cls) {
-    var el = document.getElementById('status');
-    el.textContent = msg;
-    el.className = cls === 'error' ? 'status-error' : cls === 'success' ? 'status-success' : '';
-  }
-
-  function setTokStatus(msg, cls) {
-    var el = document.getElementById('tok-status');
-    el.textContent = msg;
-    el.className = cls === 'error' ? 'status-error' : cls === 'success' ? 'status-success' : '';
   }
 
   // ─── Plugin messages ──────────────────────────────────────────────
@@ -478,47 +819,36 @@
     var msg = e.data.pluginMessage;
     if (!msg) return;
 
-    if (msg.type === 'frames') {
-      populateFrames(msg.data);
-    }
-
-    if (msg.type === 'tokenData') {
-      populateTokenData(msg.data);
-    }
+    if (msg.type === 'frames')    { populateFrames(msg.data); }
+    if (msg.type === 'tokenData') { populateTokenData(msg.data); }
+    if (msg.type === 'styleData') { buildStylesUI(msg.data); }
 
     if (msg.type === 'done') {
       var btn = document.getElementById('run-btn');
-      btn.disabled = false;
-      btn.textContent = 'Chuẩn hoá';
+      btn.disabled = false; btn.textContent = 'Chuẩn hoá';
       setStatus(msg.text, 'success');
     }
-
     if (msg.type === 'error') {
       var btn2 = document.getElementById('run-btn');
-      btn2.disabled = false;
-      btn2.textContent = 'Chuẩn hoá';
+      btn2.disabled = false; btn2.textContent = 'Chuẩn hoá';
       setStatus(msg.text, 'error');
     }
-
     if (msg.type === 'tokensApplied') {
       var abtn = document.getElementById('apply-btn');
-      abtn.disabled = false;
-      abtn.textContent = 'Apply ngay';
+      abtn.disabled = false; abtn.textContent = 'Apply ngay';
       setTokStatus('✓ Đã cập nhật ' + msg.count + ' text styles', 'success');
     }
-
     if (msg.type === 'tokensError') {
       var abtn2 = document.getElementById('apply-btn');
-      abtn2.disabled = false;
-      abtn2.textContent = 'Apply ngay';
+      abtn2.disabled = false; abtn2.textContent = 'Apply ngay';
       setTokStatus(msg.text, 'error');
     }
   };
 
-  // ─── Init: build table rows ───────────────────────────────────────
-  buildRows('size-rows', SIZE_KEYS, 'size', false);
-  buildRows('lh-rows',   LH_KEYS,   'lh',   false);
-  buildRows('ls-rows',   LS_KEYS,   'ls',   true);
+  // ─── Init ─────────────────────────────────────────────────────────
+  buildTokenRows('size-rows', SIZE_KEYS, 'size', false);
+  buildTokenRows('lh-rows',   LH_KEYS,   'lh',   false);
+  buildTokenRows('ls-rows',   LS_KEYS,   'ls',   true);
 </script>
 </body>
 </html>
