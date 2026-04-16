@@ -313,6 +313,7 @@
     <span class="nav-label">Sử dụng</span>
     <a class="nav-link" href="#features">Tính năng</a>
     <a class="nav-link" href="#howto">Hướng dẫn</a>
+    <a class="nav-link" href="#dev">Dành cho Dev</a>
     <a class="nav-link" href="#faq">Hỏi &amp; Đáp</a>
   </div>
 </nav>
@@ -777,6 +778,110 @@
   </div>
 
   <hr class="divider">
+
+  <!-- ═══ DEV HANDOFF ═══ -->
+  <div class="section">
+    <a class="section-anchor" id="dev"></a>
+    <div class="section-tag">Developer Handoff</div>
+    <h2>Dành cho Developer</h2>
+    <p>Plugin cung cấp nút <strong>Export CSS</strong> (Tab Tokens → footer) — mỗi khi designer cập nhật token, click Export, paste file vào codebase. Không cần sửa tay.</p>
+
+    <h3 style="margin-top:28px;">Workflow</h3>
+    <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:16px 0 24px;background:var(--gray-50);border-radius:12px;padding:20px 24px;">
+      <div style="text-align:center;padding:0 12px;">
+        <div style="background:var(--blue);color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;">Plugin Figma</div>
+        <div style="font-size:12px;color:var(--gray-400);margin-top:6px;">chỉnh token</div>
+      </div>
+      <div style="color:var(--gray-300);font-size:20px;padding:0 4px;">→</div>
+      <div style="text-align:center;padding:0 12px;">
+        <div style="background:#0d9488;color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;">Export CSS</div>
+        <div style="font-size:12px;color:var(--gray-400);margin-top:6px;">copy clipboard</div>
+      </div>
+      <div style="color:var(--gray-300);font-size:20px;padding:0 4px;">→</div>
+      <div style="text-align:center;padding:0 12px;">
+        <div style="background:var(--gray-700);color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;font-family:'Courier New',monospace;">tokens.css</div>
+        <div style="font-size:12px;color:var(--gray-400);margin-top:6px;">paste vào repo</div>
+      </div>
+      <div style="color:var(--gray-300);font-size:20px;padding:0 4px;">→</div>
+      <div style="text-align:center;padding:0 12px;">
+        <div style="background:var(--gray-100);color:var(--gray-700);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;">UI Components</div>
+        <div style="font-size:12px;color:var(--gray-400);margin-top:6px;">dùng CSS vars</div>
+      </div>
+    </div>
+
+    <h3>Cấu trúc file được export</h3>
+    <p>File gồm 2 phần: CSS custom properties (theo breakpoint) và các class cho từng text style.</p>
+    <div class="code-block"><pre><span class="cm">/* ── Phần 1: Token variables ── */</span>
+<span class="ck">:root</span> {
+  <span class="cm">/* font-size */</span>
+  <span class="ck">--size-2xs</span>: <span class="cv">10px</span>;  <span class="ck">--size-xs</span>: <span class="cv">11px</span>;  <span class="ck">--size-sm</span>: <span class="cv">11px</span>;
+  <span class="ck">--size-base</span>: <span class="cv">13px</span>; <span class="ck">--size-md</span>: <span class="cv">14px</span>;  <span class="ck">--size-lg</span>: <span class="cv">16px</span>;
+  <span class="ck">--size-xl</span>: <span class="cv">18px</span>;  <span class="ck">--size-2xl</span>: <span class="cv">22px</span>;
+  <span class="cm">/* line-height */</span>
+  <span class="ck">--lh-base</span>: <span class="cv">20px</span>; <span class="ck">--lh-xl</span>: <span class="cv">28px</span>; <span class="cm">/* ... */</span>
+  <span class="cm">/* letter-spacing */</span>
+  <span class="ck">--ls-0</span>: <span class="cv">0px</span>;  <span class="ck">--ls-tight</span>: <span class="cv">-0.2px</span>;  <span class="ck">--ls-tighter</span>: <span class="cv">-0.4px</span>;
+}
+
+<span class="ck">@media</span> (min-width: <span class="cv">1440px</span>) {
+  <span class="ck">:root</span> { <span class="ck">--size-sm</span>: <span class="cv">12px</span>; <span class="ck">--size-base</span>: <span class="cv">14px</span>; <span class="cm">/* ... */</span> }
+}
+<span class="ck">@media</span> (min-width: <span class="cv">1920px</span>) {
+  <span class="ck">:root</span> { <span class="ck">--size-sm</span>: <span class="cv">13px</span>; <span class="ck">--size-base</span>: <span class="cv">16px</span>; <span class="cm">/* ... */</span> }
+}
+
+<span class="cm">/* ── Phần 2: Text style classes ── */</span>
+<span class="ck">.text-display</span> {
+  font-family: <span class="cv">Arial, sans-serif</span>;
+  font-size: <span class="cv">var(--size-2xl)</span>;
+  font-weight: <span class="cv">600</span>;
+  line-height: <span class="cv">130%</span>;
+}
+<span class="ck">.text-body-default</span> {
+  font-size: <span class="cv">var(--size-base)</span>;
+  font-weight: <span class="cv">400</span>;
+  line-height: <span class="cv">170%</span>;
+}</pre></div>
+
+    <h3 style="margin-top:28px;">Quy tắc đặt tên CSS class</h3>
+    <p>Tên class được tạo tự động từ tên style trong Figma: <code>.text-</code> + tên style (thường hóa, <code>/</code> thay bằng <code>-</code>).</p>
+    <div style="overflow-x:auto;margin-top:12px;">
+      <table class="data-table">
+        <thead><tr><th>Tên style Figma</th><th>CSS class</th><th>Token</th></tr></thead>
+        <tbody>
+          <tr><td><code>Display</code></td><td><code>.text-display</code></td><td>2xl · 600 · lh 130%</td></tr>
+          <tr><td><code>Body/Default</code></td><td><code>.text-body-default</code></td><td>base · 400 · lh 170%</td></tr>
+          <tr><td><code>Body/Strong</code></td><td><code>.text-body-strong</code></td><td>base · 600 · lh 170%</td></tr>
+          <tr><td><code>Label/Default</code></td><td><code>.text-label-default</code></td><td>sm · 500</td></tr>
+          <tr><td><code>Table/Header</code></td><td><code>.text-table-header</code></td><td>xs · 600 · UPPER · ls 5%</td></tr>
+          <tr><td><code>Button/Default</code></td><td><code>.text-button-default</code></td><td>sm · 500 · lh 100%</td></tr>
+          <tr><td><code>Table/Cell-Mono</code></td><td><code>.text-table-cell-mono</code></td><td>xs · 400 · Courier New</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:28px;">Ví dụ sử dụng</h3>
+    <div class="code-block"><pre><span class="cm">&lt;!-- HTML --&gt;</span>
+<span class="cs">&lt;h1</span> <span class="ck">class</span>=<span class="cv">"text-display"</span><span class="cs">&gt;</span>Tiêu đề trang<span class="cs">&lt;/h1&gt;</span>
+<span class="cs">&lt;p</span>  <span class="ck">class</span>=<span class="cv">"text-body-default"</span><span class="cs">&gt;</span>Nội dung văn bản<span class="cs">&lt;/p&gt;</span>
+<span class="cs">&lt;label</span> <span class="ck">class</span>=<span class="cv">"text-label-default"</span><span class="cs">&gt;</span>Tên trường<span class="cs">&lt;/label&gt;</span>
+<span class="cs">&lt;th</span> <span class="ck">class</span>=<span class="cv">"text-table-header"</span><span class="cs">&gt;</span>CỘT DỮ LIỆU<span class="cs">&lt;/th&gt;</span>
+
+<span class="cm">/* CSS — chỉ cần import tokens.css, không cần khai báo gì thêm */</span>
+<span class="ck">@import</span> <span class="cv">'tokens.css'</span>;
+
+<span class="cm">/* font-size tự thay đổi theo viewport nhờ @media trong tokens.css */</span></pre></div>
+
+    <div class="callout" style="border-color:#fbbf24;background:#fffbeb;margin-top:24px;">
+      <strong style="color:#92400e;">Quan trọng</strong>
+      <ul style="margin:8px 0 0 16px;color:#78350f;line-height:1.8;">
+        <li>Không sửa tay <code>tokens.css</code> — mọi thay đổi sẽ bị ghi đè lần export tiếp theo</li>
+        <li>Khi designer thay đổi token trong plugin → export lại → commit file mới</li>
+        <li>Tên CSS class (<code>.text-*</code>) ổn định → có thể dùng khắp codebase</li>
+        <li>Giá trị token (<code>--size-base: 13px</code>) có thể thay đổi — đây là bình thường khi design system phát triển</li>
+      </ul>
+    </div>
+  </div>
 
   <!-- ═══ FAQ ═══ -->
   <div class="section">

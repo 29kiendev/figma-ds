@@ -244,10 +244,11 @@
 
   /* Footer */
   .tok-footer {
-    flex-shrink: 0; padding: 10px 16px; display: flex; gap: 8px;
+    flex-shrink: 0; padding: 10px 16px 8px; display: flex; flex-direction: column; gap: 6px;
     background: #fff; border-top: 1px solid #e5e7eb;
   }
-  .tok-footer button {
+  .tok-footer-row { display: flex; gap: 8px; }
+  .tok-footer-row button {
     flex: 1; padding: 8px; border: none; border-radius: 7px;
     font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.15s;
   }
@@ -256,6 +257,12 @@
   #apply-btn:disabled { background: #93c5fd; cursor: default; }
   #reset-btn { background: #f3f4f6; color: #374151; }
   #reset-btn:hover { background: #e5e7eb; }
+  #export-btn {
+    width: 100%; padding: 7px; border: 1px solid #0d9488;
+    background: #f0fdfa; color: #0d9488; border-radius: 7px;
+    font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.15s;
+  }
+  #export-btn:hover { background: #ccfbf1; }
   #tok-status {
     flex-shrink: 0; padding: 0 16px 10px; font-size: 11px; color: #666;
     text-align: center; min-height: 14px; line-height: 1.5;
@@ -391,8 +398,11 @@
 
   <!-- Footer -->
   <div class="tok-footer">
-    <button id="apply-btn" onclick="applyTokens()">Apply ngay</button>
-    <button id="reset-btn" onclick="resetTokens()">Reset về default</button>
+    <div class="tok-footer-row">
+      <button id="apply-btn" onclick="applyTokens()">Apply ngay</button>
+      <button id="reset-btn" onclick="resetTokens()">Reset về default</button>
+    </div>
+    <button id="export-btn" onclick="exportCSS()">Export CSS</button>
   </div>
   <div id="tok-status"></div>
 
@@ -844,6 +854,99 @@
       setTokStatus(msg.text, 'error');
     }
   };
+
+  // ─── Export CSS ───────────────────────────────────────────────────
+  function generateCSS() {
+    var tokenData = collectTokenData();
+    var styleDefs = collectStyleData();
+    var groupName = document.getElementById('group-name').value.trim() || 'FAN Font';
+    var BPS_G = ['1280','1440','1920'];
+    var SIZE_KEYS_G = ['2xs','xs','sm','base','md','lg','xl','2xl'];
+    var LS_KEYS_G = ['0','tight','tighter'];
+    var now = new Date().toLocaleDateString('vi-VN');
+    var lines = [];
+
+    lines.push('/* ================================================================');
+    lines.push(' * Typography DS — ' + groupName);
+    lines.push(' * Export: ' + now + ' — KHÔNG SỬA TAY');
+    lines.push(' * Re-export từ plugin Figma mỗi khi token thay đổi');
+    lines.push(' * Font: Arial (Regular=400, Bold=700). weight 500/600 → render Bold');
+    lines.push(' * ================================================================ */');
+    lines.push('');
+
+    for (var bpi = 0; bpi < BPS_G.length; bpi++) {
+      var bp = BPS_G[bpi];
+      var ind = bpi === 0 ? '' : '  ';
+      if (bpi > 0) lines.push('@media (min-width: ' + bp + 'px) {');
+      lines.push(ind + ':root {');
+      lines.push(ind + '  /* font-size */');
+      SIZE_KEYS_G.forEach(function(k) {
+        lines.push(ind + '  --size-' + k + ': ' + tokenData.size[k][bp] + 'px;');
+      });
+      lines.push(ind + '  /* line-height */');
+      SIZE_KEYS_G.forEach(function(k) {
+        lines.push(ind + '  --lh-' + k + ': ' + tokenData.lh[k][bp] + 'px;');
+      });
+      lines.push(ind + '  /* letter-spacing */');
+      LS_KEYS_G.forEach(function(k) {
+        lines.push(ind + '  --ls-' + k + ': ' + tokenData.ls[k][bp] + 'px;');
+      });
+      lines.push(ind + '}');
+      if (bpi > 0) lines.push('}');
+      lines.push('');
+    }
+
+    lines.push('/* ─── Text style classes ─────────────────────────────────────────── */');
+    lines.push('');
+    styleDefs.forEach(function(def) {
+      if (!def.name) return;
+      var cls = '.text-' + def.name.toLowerCase()
+        .replace(/\//g, '-').replace(/[\s_]+/g, '-').replace(/[^a-z0-9\-]/g, '');
+      var lh = def.lh ? (def.lh + '%') : 'normal';
+      var lsVal = def.ls ? def.ls : 0;
+      var lsStr = lsVal !== 0
+        ? ((lsVal / 100).toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + 'em')
+        : 'normal';
+      var ff = def.mono ? "'Courier New', monospace" : 'Arial, sans-serif';
+      lines.push(cls + ' {');
+      lines.push('  font-family: ' + ff + ';');
+      lines.push('  font-size: var(--size-' + def.token + ');');
+      lines.push('  font-weight: ' + def.weight + ';');
+      lines.push('  line-height: ' + lh + ';');
+      if (lsVal !== 0) lines.push('  letter-spacing: ' + lsStr + ';');
+      if (def.textCase === 'UPPER') lines.push('  text-transform: uppercase;');
+      lines.push('}');
+    });
+
+    return lines.join('\n');
+  }
+
+  function exportCSS() {
+    var css = generateCSS();
+    var btn = document.getElementById('export-btn');
+    var orig = btn.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(css).then(function() {
+        btn.textContent = '✓ Đã copy vào clipboard';
+        setTimeout(function() { btn.textContent = orig; }, 2500);
+      }).catch(function() { fallbackCopy(css, btn, orig); });
+    } else {
+      fallbackCopy(css, btn, orig);
+    }
+  }
+
+  function fallbackCopy(text, btn, orig) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+    document.body.appendChild(ta); ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+    btn.textContent = ok ? '✓ Đã copy vào clipboard' : '✗ Copy thất bại — xem console';
+    if (!ok) console.log(text);
+    setTimeout(function() { btn.textContent = orig; }, 2500);
+  }
 
   // ─── Init ─────────────────────────────────────────────────────────
   buildTokenRows('size-rows', SIZE_KEYS, 'size', false);
