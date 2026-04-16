@@ -7,52 +7,104 @@ var SKIP_SIZES      = [8, 9];
 var FONT_MONO       = 'Courier New';
 var WEIGHT_MAP      = { 400: 'Regular', 500: 'Bold', 600: 'Bold' };
 
-var SIZE_TOKENS = {
-  'size/2xs':  { '1280': 10, '1440': 10, '1920': 11 },
-  'size/xs':   { '1280': 11, '1440': 11, '1920': 12 },
-  'size/sm':   { '1280': 11, '1440': 12, '1920': 13 },
-  'size/base': { '1280': 13, '1440': 14, '1920': 16 },
-  'size/md':   { '1280': 14, '1440': 15, '1920': 17 },
-  'size/lg':   { '1280': 16, '1440': 16, '1920': 18 },
-  'size/xl':   { '1280': 18, '1440': 20, '1920': 22 },
-  'size/2xl':  { '1280': 22, '1440': 24, '1920': 28 },
+// ─── Default token values (immutable — dùng để Reset) ────────────────────────
+var DEFAULT_SIZE = {
+  '2xs':  { '1280': 10, '1440': 10, '1920': 11 },
+  'xs':   { '1280': 11, '1440': 11, '1920': 12 },
+  'sm':   { '1280': 11, '1440': 12, '1920': 13 },
+  'base': { '1280': 13, '1440': 14, '1920': 16 },
+  'md':   { '1280': 14, '1440': 15, '1920': 17 },
+  'lg':   { '1280': 16, '1440': 16, '1920': 18 },
+  'xl':   { '1280': 18, '1440': 20, '1920': 22 },
+  '2xl':  { '1280': 22, '1440': 24, '1920': 28 },
 };
-var LH_TOKENS = {
-  'line-height/2xs':  { '1280': 16, '1440': 16, '1920': 16 },
-  'line-height/xs':   { '1280': 16, '1440': 16, '1920': 18 },
-  'line-height/sm':   { '1280': 16, '1440': 18, '1920': 20 },
-  'line-height/base': { '1280': 20, '1440': 22, '1920': 24 },
-  'line-height/md':   { '1280': 20, '1440': 22, '1920': 26 },
-  'line-height/lg':   { '1280': 24, '1440': 24, '1920': 28 },
-  'line-height/xl':   { '1280': 28, '1440': 30, '1920': 34 },
-  'line-height/2xl':  { '1280': 32, '1440': 36, '1920': 42 },
+var DEFAULT_LH = {
+  '2xs':  { '1280': 16, '1440': 16, '1920': 16 },
+  'xs':   { '1280': 16, '1440': 16, '1920': 18 },
+  'sm':   { '1280': 16, '1440': 18, '1920': 20 },
+  'base': { '1280': 20, '1440': 22, '1920': 24 },
+  'md':   { '1280': 20, '1440': 22, '1920': 26 },
+  'lg':   { '1280': 24, '1440': 24, '1920': 28 },
+  'xl':   { '1280': 28, '1440': 30, '1920': 34 },
+  '2xl':  { '1280': 32, '1440': 36, '1920': 42 },
 };
-var LS_TOKENS = {
-  'letter-spacing/0':       { '1280':    0, '1440':    0, '1920':    0 },
-  'letter-spacing/tight':   { '1280': -0.2, '1440': -0.3, '1920': -0.4 },
-  'letter-spacing/tighter': { '1280': -0.4, '1440': -0.5, '1920': -0.6 },
+var DEFAULT_LS = {
+  '0':       { '1280':  0.0, '1440':  0.0, '1920':  0.0 },
+  'tight':   { '1280': -0.2, '1440': -0.3, '1920': -0.4 },
+  'tighter': { '1280': -0.4, '1440': -0.5, '1920': -0.6 },
 };
-var SIZE_TO_SUFFIX = {
-  10: '2xs', 11: 'xs',  12: 'sm',  13: 'base',
-  14: 'md',  15: 'md',  16: 'lg',  17: 'lg',
-  18: 'xl',  20: 'xl',  22: '2xl', 24: '2xl', 28: '2xl',
-};
+
+// ─── Runtime token tables (populated by loadTokenData on startup) ─────────────
+// Các hàm trong plugin đọc từ đây — tự động cập nhật khi user thay đổi trong UI
+var SIZE_TOKENS = {};
+var LH_TOKENS   = {};
+var LS_TOKENS   = {};
+
+// SUFFIX_TO_LS: mối quan hệ suffix→ls-key, không phải giá trị số → giữ hardcoded
 var SUFFIX_TO_LS = {
-  '2xs': 'letter-spacing/0', 'xs': 'letter-spacing/0',
+  '2xs': 'letter-spacing/0', 'xs':   'letter-spacing/0',
   'sm':  'letter-spacing/0', 'base': 'letter-spacing/0',
-  'md':  'letter-spacing/0', 'lg': 'letter-spacing/0',
+  'md':  'letter-spacing/0', 'lg':   'letter-spacing/0',
   'xl':  'letter-spacing/tight', '2xl': 'letter-spacing/tighter',
 };
-var GUIDELINE_TOKENS = [
-  { name: '2xs',  sizes: [10,10,11], lh: [16,16,16], ls: [0,0,0]           },
-  { name: 'xs',   sizes: [11,11,12], lh: [16,16,18], ls: [0,0,0]           },
-  { name: 'sm',   sizes: [11,12,13], lh: [16,18,20], ls: [0,0,0]           },
-  { name: 'base', sizes: [13,14,16], lh: [20,22,24], ls: [0,0,0]           },
-  { name: 'md',   sizes: [14,15,17], lh: [20,22,26], ls: [0,0,0]           },
-  { name: 'lg',   sizes: [16,16,18], lh: [24,24,28], ls: [0,0,0]           },
-  { name: 'xl',   sizes: [18,20,22], lh: [28,30,34], ls: [-0.2,-0.3,-0.4]  },
-  { name: '2xl',  sizes: [22,24,28], lh: [32,36,42], ls: [-0.4,-0.5,-0.6]  },
-];
+
+// Rebuilt từ token data mỗi khi data thay đổi
+var SIZE_TO_SUFFIX  = {};
+var GUIDELINE_TOKENS = [];
+
+// ─── Token storage & runtime helpers ─────────────────────────────────────────
+
+function deepCopy(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+function getDefaultTokenData() {
+  return { size: deepCopy(DEFAULT_SIZE), lh: deepCopy(DEFAULT_LH), ls: deepCopy(DEFAULT_LS) };
+}
+
+// Áp dụng token data vào runtime variables + rebuild các bảng derived
+function applyTokenData(data) {
+  var sz = ['2xs','xs','sm','base','md','lg','xl','2xl'];
+  var lk = ['0','tight','tighter'];
+  var bps = ['1280','1440','1920'];
+  SIZE_TOKENS = {}; LH_TOKENS = {}; LS_TOKENS = {};
+  for (var i = 0; i < sz.length; i++) {
+    SIZE_TOKENS['size/'        + sz[i]] = deepCopy(data.size[sz[i]]);
+    LH_TOKENS['line-height/'   + sz[i]] = deepCopy(data.lh[sz[i]]);
+  }
+  for (var j = 0; j < lk.length; j++) {
+    LS_TOKENS['letter-spacing/' + lk[j]] = deepCopy(data.ls[lk[j]]);
+  }
+  // Rebuild SIZE_TO_SUFFIX (last-write-wins cho duplicate sizes)
+  SIZE_TO_SUFFIX = {};
+  for (var si = 0; si < sz.length; si++) {
+    for (var bi = 0; bi < bps.length; bi++) {
+      SIZE_TO_SUFFIX[ SIZE_TOKENS['size/' + sz[si]][bps[bi]] ] = sz[si];
+    }
+  }
+  // Rebuild GUIDELINE_TOKENS từ các giá trị hiện tại
+  GUIDELINE_TOKENS = sz.map(function(s) {
+    var lsKey = SUFFIX_TO_LS[s];
+    return {
+      name:  s,
+      sizes: bps.map(function(bp){ return SIZE_TOKENS['size/'+s][bp]; }),
+      lh:    bps.map(function(bp){ return LH_TOKENS['line-height/'+s][bp]; }),
+      ls:    bps.map(function(bp){ return LS_TOKENS[lsKey][bp]; }),
+    };
+  });
+}
+
+// Đọc từ figma.root.getPluginData — nếu chưa có thì dùng default
+function loadTokenData() {
+  var stored = figma.root.getPluginData('tokenData');
+  var data = stored ? JSON.parse(stored) : getDefaultTokenData();
+  applyTokenData(data);
+  return data;
+}
+
+// Lưu vào figma.root (nằm trong file Figma, dùng chung được với team) + apply
+function saveTokenData(data) {
+  figma.root.setPluginData('tokenData', JSON.stringify(data));
+  applyTokenData(data);
+}
 
 var STYLE_TO_WEIGHT = {
   'Thin': 100, 'ExtraLight': 200, 'Light': 300,
@@ -541,24 +593,60 @@ function autoApplyStyles(frame, groupName) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-figma.showUI(__html__, { width: 320, height: 500 });
+figma.showUI(__html__, { width: 320, height: 560 });
 
-// Gửi danh sách frames lên UI
-var frameList = [];
-for (var pi = 0; pi < figma.root.children.length; pi++) {
-  var pg = figma.root.children[pi];
-  var pgch = pg.children || [];
-  for (var ci = 0; ci < pgch.length; ci++) {
-    var n = pgch[ci];
-    if (n.type === 'FRAME') {
-      frameList.push({ id: n.id, name: n.name, page: pg.name,
-        w: Math.round(n.width), h: Math.round(n.height) });
+var currentTokenData = loadTokenData();
+
+figma.ui.postMessage({ type: 'frames', data: buildFrameList() });
+figma.ui.postMessage({ type: 'tokenData', data: currentTokenData });
+
+function buildFrameList() {
+  var list = [];
+  for (var pi = 0; pi < figma.root.children.length; pi++) {
+    var pg = figma.root.children[pi];
+    var pgch = pg.children || [];
+    for (var ci = 0; ci < pgch.length; ci++) {
+      var n = pgch[ci];
+      if (n.type === 'FRAME') {
+        list.push({ id: n.id, name: n.name, page: pg.name,
+          w: Math.round(n.width), h: Math.round(n.height) });
+      }
     }
   }
+  return list;
 }
-figma.ui.postMessage({ type: 'frames', data: frameList });
 
 figma.ui.onmessage = async function(msg) {
+  // ── Refresh frame list ───────────────────────────────────────────
+  if (msg.type === 'getFrames') {
+    figma.ui.postMessage({ type: 'frames', data: buildFrameList() });
+    return;
+  }
+
+  // ── Token tab handlers ───────────────────────────────────────────
+  if (msg.type === 'getTokens') {
+    figma.ui.postMessage({ type: 'tokenData', data: currentTokenData });
+    return;
+  }
+  if (msg.type === 'applyTokens') {
+    try {
+      currentTokenData = msg.data;
+      saveTokenData(currentTokenData);
+      var res2 = setupVariables([]);
+      var cnt = await createTextStyles(msg.groupName || 'FAN Font', res2.varMap);
+      figma.ui.postMessage({ type: 'tokensApplied', count: cnt });
+    } catch(e) {
+      figma.ui.postMessage({ type: 'tokensError', text: e.message });
+    }
+    return;
+  }
+  if (msg.type === 'resetTokens') {
+    currentTokenData = getDefaultTokenData();
+    saveTokenData(currentTokenData);
+    figma.ui.postMessage({ type: 'tokenData', data: currentTokenData });
+    return;
+  }
+
   if (msg.type !== 'run') return;
 
   var frame = figma.getNodeById(msg.frameId);

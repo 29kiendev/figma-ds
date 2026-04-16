@@ -9,164 +9,418 @@
     font-size: 12px;
     color: #1a1a1a;
     background: #fff;
-    padding: 16px;
-    width: 300px;
+    width: 320px;
+    overflow: hidden;
   }
-  h2 { font-size: 14px; font-weight: bold; margin-bottom: 16px; color: #111; }
-  .section { margin-bottom: 16px; }
+
+  /* ─── Header ─── */
+  .header { padding: 14px 16px 0; }
+  .header h2 { font-size: 13px; font-weight: bold; color: #111; margin-bottom: 10px; }
+  .group-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .group-row label {
+    font-size: 11px; color: #888; white-space: nowrap;
+    font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .group-row input {
+    flex: 1; padding: 6px 8px; border: 1px solid #ddd;
+    border-radius: 6px; font-size: 12px; outline: none;
+  }
+  .group-row input:focus { border-color: #3b82f6; }
+
+  /* ─── Tabs ─── */
+  .tabs { display: flex; border-bottom: 1px solid #e5e7eb; padding: 0 16px; }
+  .tab-btn {
+    padding: 8px 14px; font-size: 12px; font-weight: bold; color: #888;
+    border: none; background: none; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s;
+  }
+  .tab-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+
+  /* ─── Tab content ─── */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ─── Tab 1 ─── */
+  #tab1 { padding: 14px 16px; }
   .section-title {
-    font-size: 11px;
-    font-weight: bold;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
+    font-size: 11px; font-weight: bold; color: #666;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
   }
+  .section { margin-bottom: 14px; }
+  .frame-row { display: flex; gap: 6px; align-items: center; }
+  .frame-row select { flex: 1; }
+  .refresh-btn {
+    flex-shrink: 0; width: 30px; height: 30px; border: 1px solid #ddd;
+    border-radius: 6px; background: #fafafa; cursor: pointer;
+    font-size: 14px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; color: #555;
+  }
+  .refresh-btn:hover { background: #f0f0f0; border-color: #bbb; }
+  .refresh-btn.spinning { animation: spin 0.6s linear; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   select {
-    width: 100%;
-    padding: 7px 8px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 12px;
-    background: #fafafa;
-    color: #1a1a1a;
-    outline: none;
-    cursor: pointer;
+    width: 100%; padding: 7px 8px; border: 1px solid #ddd;
+    border-radius: 6px; font-size: 12px; background: #fafafa;
+    color: #1a1a1a; outline: none; cursor: pointer;
   }
   select:focus { border-color: #3b82f6; }
   .checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 0;
-    cursor: pointer;
-    user-select: none;
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 0; cursor: pointer; user-select: none;
   }
   .checkbox-row input[type="checkbox"] {
-    width: 14px; height: 14px;
-    accent-color: #3b82f6;
-    cursor: pointer;
-    flex-shrink: 0;
-    pointer-events: none;
+    width: 14px; height: 14px; accent-color: #3b82f6;
+    cursor: pointer; flex-shrink: 0; pointer-events: none;
   }
   .checkbox-row label { cursor: pointer; line-height: 1.4; }
-  .bp-group {
-    display: flex;
-    gap: 8px;
-    margin-top: 4px;
-    padding-left: 22px;
-  }
+  .bp-group { display: flex; gap: 8px; margin-top: 4px; padding-left: 22px; }
   .bp-chip {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    cursor: pointer;
-    background: #fafafa;
-    transition: all 0.15s;
-    user-select: none;
+    display: flex; align-items: center; gap: 5px; padding: 4px 10px;
+    border: 1px solid #ddd; border-radius: 20px; cursor: pointer;
+    background: #fafafa; transition: all 0.15s; user-select: none; font-size: 12px;
   }
   .bp-chip.active { border-color: #3b82f6; background: #eff6ff; color: #2563eb; }
   .bp-chip input { display: none; }
-  .sample-group {
-    margin-top: 8px;
-    padding-left: 22px;
-  }
+  .sample-group { margin-top: 6px; padding-left: 22px; }
   .sample-group input[type="text"] {
-    width: 100%;
-    padding: 7px 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 13px;
-    outline: none;
+    width: 100%; padding: 6px 8px; border: 1px solid #ddd;
+    border-radius: 6px; font-size: 12px; outline: none;
   }
   .sample-group input:focus { border-color: #3b82f6; }
-  .sample-hint { font-size: 11px; color: #999; margin-top: 4px; }
-  .divider { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+  .sample-hint { font-size: 11px; color: #999; margin-top: 3px; }
+  .divider { border: none; border-top: 1px solid #eee; margin: 12px 0; }
   #run-btn {
-    width: 100%;
-    padding: 10px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.15s;
+    width: 100%; padding: 10px; background: #3b82f6; color: white;
+    border: none; border-radius: 8px; font-size: 13px;
+    font-weight: bold; cursor: pointer; transition: background 0.15s;
   }
   #run-btn:hover { background: #2563eb; }
   #run-btn:disabled { background: #93c5fd; cursor: default; }
   #status {
-    margin-top: 12px;
-    font-size: 11px;
-    color: #666;
-    text-align: center;
-    min-height: 16px;
-    line-height: 1.5;
-    white-space: pre-line;
+    margin-top: 10px; font-size: 11px; color: #666;
+    text-align: center; min-height: 14px; line-height: 1.5; white-space: pre-line;
   }
-  #status.error { color: #dc2626; }
-  #status.success { color: #16a34a; }
+  .status-error { color: #dc2626 !important; }
+  .status-success { color: #16a34a !important; }
   .hidden { display: none; }
+
+  /* ─── Tab 2 ─── */
+  #tab2 { overflow-y: auto; max-height: 450px; }
+
+  .accordion { border-bottom: 1px solid #e5e7eb; }
+  .accordion-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; cursor: pointer; user-select: none; background: #fafafa;
+  }
+  .accordion-header:hover { background: #f3f4f6; }
+  .accordion-title {
+    font-size: 11px; font-weight: bold; color: #374151;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .accordion-icon { font-size: 12px; color: #9ca3af; transition: transform 0.15s; }
+  .accordion.open .accordion-icon { transform: rotate(180deg); }
+  .accordion-body { display: none; padding: 4px 16px 12px; }
+  .accordion.open .accordion-body { display: block; }
+
+  .tok-table { width: 100%; border-collapse: collapse; }
+  .tok-table th {
+    font-size: 10px; font-weight: bold; color: #9ca3af;
+    text-align: center; padding: 0 0 6px; text-transform: uppercase;
+  }
+  .tok-table th:first-child { text-align: left; }
+  .tok-table td { padding: 3px 2px; text-align: center; }
+  .tok-table td:first-child { text-align: left; padding-left: 0; }
+  .tok-label {
+    font-size: 11px; font-weight: bold; color: #2563eb;
+    background: #eff6ff; border-radius: 4px; padding: 2px 6px;
+    display: inline-block; min-width: 34px; text-align: center;
+  }
+  .tok-input {
+    width: 52px; padding: 4px 4px; border: 1px solid #ddd;
+    border-radius: 5px; font-size: 12px; text-align: center;
+    outline: none; color: #111; background: #fff;
+    -moz-appearance: textfield;
+  }
+  .tok-input::-webkit-inner-spin-button,
+  .tok-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .tok-input:focus { border-color: #3b82f6; }
+
+  .tok-footer {
+    padding: 10px 16px; display: flex; gap: 8px;
+    background: #fff; border-top: 1px solid #e5e7eb;
+    position: sticky; bottom: 0;
+  }
+  .tok-footer button {
+    flex: 1; padding: 8px; border: none; border-radius: 7px;
+    font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.15s;
+  }
+  #apply-btn { background: #3b82f6; color: #fff; }
+  #apply-btn:hover { background: #2563eb; }
+  #apply-btn:disabled { background: #93c5fd; cursor: default; }
+  #reset-btn { background: #f3f4f6; color: #374151; }
+  #reset-btn:hover { background: #e5e7eb; }
+  #tok-status {
+    padding: 0 16px 10px; font-size: 11px; color: #666;
+    text-align: center; min-height: 14px; line-height: 1.5;
+  }
 </style>
 </head>
 <body>
 
-<h2>Typography DS</h2>
-
-<!-- Frame selector -->
-<div class="section">
-  <div class="section-title">Frame</div>
-  <select id="frame-select">
-    <option value="">Đang tải danh sách frame...</option>
-  </select>
-</div>
-
-<!-- Group name -->
-<div class="section">
-  <div class="section-title">Tên nhóm styles</div>
-  <input type="text" id="group-name" value="FAN Font" maxlength="30" placeholder="FAN Font"
-    style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none;">
-</div>
-
-<hr class="divider">
-
-<!-- Tuỳ chọn thêm -->
-<div class="section">
-  <div class="section-title">Tuỳ chọn</div>
-
-  <div class="checkbox-row" onclick="toggle('action-dup')">
-    <input type="checkbox" id="action-dup">
-    <label>Nhân bản frame theo breakpoint</label>
+<!-- ─── Header ─── -->
+<div class="header">
+  <h2>Typography DS</h2>
+  <div class="group-row">
+    <label>Nhóm</label>
+    <input type="text" id="group-name" value="FAN Font" maxlength="30" placeholder="FAN Font">
   </div>
-  <div class="bp-group hidden" id="bp-group">
-    <div class="bp-chip active" id="chip-1440" onclick="toggleChip('1440')">
-      <input type="checkbox" id="bp-1440" checked> 1440
-    </div>
-    <div class="bp-chip active" id="chip-1920" onclick="toggleChip('1920')">
-      <input type="checkbox" id="bp-1920" checked> 1920
+</div>
+
+<!-- ─── Tab bar ─── -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab(1)">Chuẩn hoá</button>
+  <button class="tab-btn" onclick="switchTab(2)">Tokens</button>
+</div>
+
+<!-- ─── Tab 1: Chuẩn hoá ─── -->
+<div id="tab1" class="tab-content active">
+  <div class="section">
+    <div class="section-title">Frame</div>
+    <div class="frame-row">
+      <select id="frame-select">
+        <option value="">Đang tải danh sách frame...</option>
+      </select>
+      <button class="refresh-btn" id="refresh-btn" onclick="refreshFrames()" title="Làm mới danh sách frame">↻</button>
     </div>
   </div>
 
-  <div class="checkbox-row" onclick="toggle('action-guide')">
-    <input type="checkbox" id="action-guide">
-    <label>Tạo bản Guidelines</label>
+  <hr class="divider">
+
+  <div class="section">
+    <div class="section-title">Tuỳ chọn</div>
+
+    <div class="checkbox-row" onclick="toggle('action-dup')">
+      <input type="checkbox" id="action-dup">
+      <label>Nhân bản frame theo breakpoint</label>
+    </div>
+    <div class="bp-group hidden" id="bp-group">
+      <div class="bp-chip active" id="chip-1440" onclick="toggleChip('1440')">
+        <input type="checkbox" id="bp-1440" checked> 1440
+      </div>
+      <div class="bp-chip active" id="chip-1920" onclick="toggleChip('1920')">
+        <input type="checkbox" id="bp-1920" checked> 1920
+      </div>
+    </div>
+
+    <div class="checkbox-row" onclick="toggle('action-guide')">
+      <input type="checkbox" id="action-guide">
+      <label>Tạo bản Guidelines</label>
+    </div>
+    <div class="sample-group hidden" id="sample-group">
+      <input type="text" id="sample-text" value="Ag" maxlength="10" placeholder="Ag">
+      <div class="sample-hint">Text mẫu hiển thị trong guidelines</div>
+    </div>
   </div>
-  <div class="sample-group hidden" id="sample-group">
-    <input type="text" id="sample-text" value="Ag" maxlength="10" placeholder="Ag">
-    <div class="sample-hint">Text mẫu hiển thị trong guidelines</div>
-  </div>
+
+  <hr class="divider">
+  <button id="run-btn" onclick="run()">Chuẩn hoá</button>
+  <div id="status"></div>
 </div>
 
-<hr class="divider">
+<!-- ─── Tab 2: Tokens ─── -->
+<div id="tab2" class="tab-content">
 
-<button id="run-btn" onclick="run()">Chuẩn hoá</button>
-<div id="status"></div>
+  <!-- Font Size -->
+  <div class="accordion open" id="acc-size">
+    <div class="accordion-header" onclick="toggleAcc('acc-size')">
+      <span class="accordion-title">Font Size (px)</span>
+      <span class="accordion-icon">▾</span>
+    </div>
+    <div class="accordion-body">
+      <table class="tok-table">
+        <thead><tr><th>Token</th><th>1280</th><th>1440</th><th>1920</th></tr></thead>
+        <tbody id="size-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Line Height -->
+  <div class="accordion" id="acc-lh">
+    <div class="accordion-header" onclick="toggleAcc('acc-lh')">
+      <span class="accordion-title">Line Height (px)</span>
+      <span class="accordion-icon">▾</span>
+    </div>
+    <div class="accordion-body">
+      <table class="tok-table">
+        <thead><tr><th>Token</th><th>1280</th><th>1440</th><th>1920</th></tr></thead>
+        <tbody id="lh-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Letter Spacing -->
+  <div class="accordion" id="acc-ls">
+    <div class="accordion-header" onclick="toggleAcc('acc-ls')">
+      <span class="accordion-title">Letter Spacing (px)</span>
+      <span class="accordion-icon">▾</span>
+    </div>
+    <div class="accordion-body">
+      <table class="tok-table">
+        <thead><tr><th>Token</th><th>1280</th><th>1440</th><th>1920</th></tr></thead>
+        <tbody id="ls-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="tok-footer">
+    <button id="apply-btn" onclick="applyTokens()">Apply ngay</button>
+    <button id="reset-btn" onclick="resetTokens()">Reset về default</button>
+  </div>
+  <div id="tok-status"></div>
+
+</div>
 
 <script>
+  var SIZE_KEYS = ['2xs','xs','sm','base','md','lg','xl','2xl'];
+  var LH_KEYS   = ['2xs','xs','sm','base','md','lg','xl','2xl'];
+  var LS_KEYS   = ['0','tight','tighter'];
+  var BPS = ['1280','1440','1920'];
+
+  // ─── Tab switching ────────────────────────────────────────────────
+  function switchTab(n) {
+    document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('tab' + n).classList.add('active');
+    document.querySelectorAll('.tab-btn')[n-1].classList.add('active');
+  }
+
+  // ─── Accordion ────────────────────────────────────────────────────
+  function toggleAcc(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  // ─── Build token table rows ───────────────────────────────────────
+  function buildRows(tbodyId, keys, prefix, isFloat) {
+    var tbody = document.getElementById(tbodyId);
+    keys.forEach(function(key) {
+      var tr = document.createElement('tr');
+      var tdLabel = document.createElement('td');
+      tdLabel.innerHTML = '<span class="tok-label">' + key + '</span>';
+      tr.appendChild(tdLabel);
+      BPS.forEach(function(bp) {
+        var td = document.createElement('td');
+        var inp = document.createElement('input');
+        inp.type = 'number';
+        inp.step = isFloat ? '0.1' : '1';
+        inp.className = 'tok-input';
+        inp.id = prefix + '-' + key + '-' + bp;
+        inp.value = '0';
+        td.appendChild(inp);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ─── Populate tables with token data ─────────────────────────────
+  function populateTokenData(data) {
+    SIZE_KEYS.forEach(function(key) {
+      BPS.forEach(function(bp) {
+        var el = document.getElementById('size-' + key + '-' + bp);
+        if (el && data.size && data.size[key]) el.value = data.size[key][bp];
+      });
+    });
+    LH_KEYS.forEach(function(key) {
+      BPS.forEach(function(bp) {
+        var el = document.getElementById('lh-' + key + '-' + bp);
+        if (el && data.lh && data.lh[key]) el.value = data.lh[key][bp];
+      });
+    });
+    LS_KEYS.forEach(function(key) {
+      BPS.forEach(function(bp) {
+        var el = document.getElementById('ls-' + key + '-' + bp);
+        if (el && data.ls && data.ls[key] !== undefined) el.value = data.ls[key][bp];
+      });
+    });
+  }
+
+  // ─── Collect token data from UI ───────────────────────────────────
+  function collectTokenData() {
+    var data = { size: {}, lh: {}, ls: {} };
+    SIZE_KEYS.forEach(function(key) {
+      data.size[key] = {};
+      BPS.forEach(function(bp) {
+        var el = document.getElementById('size-' + key + '-' + bp);
+        data.size[key][bp] = parseFloat(el ? el.value : 0) || 0;
+      });
+    });
+    LH_KEYS.forEach(function(key) {
+      data.lh[key] = {};
+      BPS.forEach(function(bp) {
+        var el = document.getElementById('lh-' + key + '-' + bp);
+        data.lh[key][bp] = parseFloat(el ? el.value : 0) || 0;
+      });
+    });
+    LS_KEYS.forEach(function(key) {
+      data.ls[key] = {};
+      BPS.forEach(function(bp) {
+        var el = document.getElementById('ls-' + key + '-' + bp);
+        data.ls[key][bp] = parseFloat(el ? el.value : 0) || 0;
+      });
+    });
+    return data;
+  }
+
+  // ─── Apply tokens ─────────────────────────────────────────────────
+  function applyTokens() {
+    var btn = document.getElementById('apply-btn');
+    btn.disabled = true;
+    btn.textContent = 'Đang xử lý...';
+    setTokStatus('');
+    parent.postMessage({ pluginMessage: {
+      type: 'applyTokens',
+      data: collectTokenData(),
+      groupName: document.getElementById('group-name').value.trim() || 'FAN Font',
+    }}, '*');
+  }
+
+  // ─── Reset tokens ─────────────────────────────────────────────────
+  function resetTokens() {
+    parent.postMessage({ pluginMessage: { type: 'resetTokens' } }, '*');
+  }
+
+  // ─── Refresh frame list ───────────────────────────────────────────
+  function refreshFrames() {
+    var btn = document.getElementById('refresh-btn');
+    btn.classList.add('spinning');
+    parent.postMessage({ pluginMessage: { type: 'getFrames' } }, '*');
+    setTimeout(function() { btn.classList.remove('spinning'); }, 600);
+  }
+
+  function populateFrames(data) {
+    var sel = document.getElementById('frame-select');
+    var prev = sel.value;
+    sel.innerHTML = '';
+    if (data.length === 0) {
+      sel.innerHTML = '<option value="">Không tìm thấy frame</option>';
+      return;
+    }
+    data.forEach(function(f) {
+      var opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = (data.length > 5 ? '[' + f.page + '] ' : '') + f.name + '  (' + f.w + '×' + f.h + ')';
+      sel.appendChild(opt);
+    });
+    // Giữ lại selection cũ nếu frame vẫn còn tồn tại
+    if (prev) sel.value = prev;
+    if (!sel.value && data.length > 0) {
+      var def = data.find(function(f) { return f.name === '1280'; });
+      sel.value = def ? def.id : data[0].id;
+    }
+  }
+
+  // ─── Tab 1 helpers ────────────────────────────────────────────────
   function toggle(id) {
     var el = document.getElementById(id);
     el.checked = !el.checked;
@@ -188,17 +442,14 @@
   function run() {
     var frameId = document.getElementById('frame-select').value;
     if (!frameId) { setStatus('Chọn frame trước', 'error'); return; }
-
     var breakpoints = [];
     ['1440','1920'].forEach(function(bp) {
       if (document.getElementById('bp-' + bp).checked) breakpoints.push(bp);
     });
-
     var btn = document.getElementById('run-btn');
     btn.disabled = true;
     btn.textContent = 'Đang xử lý...';
     setStatus('');
-
     parent.postMessage({ pluginMessage: {
       type:       'run',
       frameId:    frameId,
@@ -213,43 +464,61 @@
   function setStatus(msg, cls) {
     var el = document.getElementById('status');
     el.textContent = msg;
-    el.className = cls || '';
+    el.className = cls === 'error' ? 'status-error' : cls === 'success' ? 'status-success' : '';
   }
 
+  function setTokStatus(msg, cls) {
+    var el = document.getElementById('tok-status');
+    el.textContent = msg;
+    el.className = cls === 'error' ? 'status-error' : cls === 'success' ? 'status-success' : '';
+  }
+
+  // ─── Plugin messages ──────────────────────────────────────────────
   window.onmessage = function(e) {
     var msg = e.data.pluginMessage;
     if (!msg) return;
 
     if (msg.type === 'frames') {
-      var sel = document.getElementById('frame-select');
-      sel.innerHTML = '';
-      if (msg.data.length === 0) {
-        sel.innerHTML = '<option value="">Không tìm thấy frame</option>';
-        return;
-      }
-      msg.data.forEach(function(f) {
-        var opt = document.createElement('option');
-        opt.value = f.id;
-        opt.textContent = (msg.data.length > 5 ? '[' + f.page + '] ' : '') + f.name + '  (' + f.w + '×' + f.h + ')';
-        if (f.name === '1280') opt.selected = true;
-        sel.appendChild(opt);
-      });
+      populateFrames(msg.data);
+    }
+
+    if (msg.type === 'tokenData') {
+      populateTokenData(msg.data);
     }
 
     if (msg.type === 'done') {
       var btn = document.getElementById('run-btn');
       btn.disabled = false;
-      btn.textContent = 'Chạy';
+      btn.textContent = 'Chuẩn hoá';
       setStatus(msg.text, 'success');
     }
 
     if (msg.type === 'error') {
       var btn2 = document.getElementById('run-btn');
       btn2.disabled = false;
-      btn2.textContent = 'Chạy';
+      btn2.textContent = 'Chuẩn hoá';
       setStatus(msg.text, 'error');
     }
+
+    if (msg.type === 'tokensApplied') {
+      var abtn = document.getElementById('apply-btn');
+      abtn.disabled = false;
+      abtn.textContent = 'Apply ngay';
+      setTokStatus('✓ Đã cập nhật ' + msg.count + ' text styles', 'success');
+    }
+
+    if (msg.type === 'tokensError') {
+      var abtn2 = document.getElementById('apply-btn');
+      abtn2.disabled = false;
+      abtn2.textContent = 'Apply ngay';
+      setTokStatus(msg.text, 'error');
+    }
   };
+
+  // ─── Init: build table rows ───────────────────────────────────────
+  buildRows('size-rows', SIZE_KEYS, 'size', false);
+  buildRows('lh-rows',   LH_KEYS,   'lh',   false);
+  buildRows('ls-rows',   LS_KEYS,   'ls',   true);
 </script>
 </body>
 </html>
