@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Typography DS — Hướng dẫn sử dụng</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:    #3b82f6;
+    --blue-d:  #2563eb;
+    --blue-l:  #eff6ff;
+    --blue-m:  #dbeafe;
+    --indigo:  #6366f1;
+    --teal:    #0d9488;
+    --orange:  #f97316;
+    --rose:    #f43f5e;
+    --gray-50:  #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --radius:   12px;
+    --shadow:   0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--gray-700);
+    background: #fff;
+  }
+
+  /* ─── Layout ─── */
+  .page { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--gray-50);
+    border-right: 1px solid var(--gray-200);
+    padding: 32px 0;
+  }
+
+  .sidebar-logo {
+    padding: 0 24px 24px;
+    border-bottom: 1px solid var(--gray-200);
+    margin-bottom: 20px;
+  }
+  .sidebar-logo .logo-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue); color: #fff;
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 700; letter-spacing: .3px;
+  }
+  .sidebar-logo .version {
+    display: block; font-size: 11px; color: var(--gray-400); margin-top: 6px;
+  }
+
+  .nav-section { padding: 0 16px; margin-bottom: 6px; }
+  .nav-label {
+    font-size: 10px; font-weight: 700; color: var(--gray-400);
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 0 8px; margin-bottom: 4px; display: block;
+  }
+  .nav-link {
+    display: block; padding: 7px 8px; border-radius: 7px;
+    font-size: 13px; color: var(--gray-600); text-decoration: none;
+    transition: all .15s; font-weight: 500;
+  }
+  .nav-link:hover { background: var(--gray-200); color: var(--gray-900); }
+  .nav-link.active { background: var(--blue-m); color: var(--blue-d); }
+
+  .content {
+    flex: 1;
+    min-width: 0;
+    max-width: 860px;
+    padding: 60px 56px;
+  }
+
+  /* ─── Typography ─── */
+  h1 { font-size: 36px; font-weight: 800; color: var(--gray-900); line-height: 1.2; margin-bottom: 16px; }
+  h2 { font-size: 24px; font-weight: 700; color: var(--gray-900); margin-bottom: 16px; padding-top: 8px; }
+  h3 { font-size: 17px; font-weight: 600; color: var(--gray-800); margin-bottom: 10px; }
+  p  { margin-bottom: 16px; }
+  strong { font-weight: 600; color: var(--gray-800); }
+  code {
+    font-family: 'Courier New', monospace; font-size: 13px;
+    background: var(--gray-100); color: #c026d3;
+    padding: 2px 6px; border-radius: 4px;
+  }
+  ul, ol { padding-left: 20px; margin-bottom: 16px; }
+  li { margin-bottom: 6px; }
+
+  /* ─── Sections ─── */
+  .section { margin-bottom: 72px; }
+  .section-anchor { display: block; position: relative; top: -80px; visibility: hidden; }
+  .section-tag {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--blue); background: var(--blue-l);
+    padding: 3px 10px; border-radius: 20px; margin-bottom: 12px;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 50%, #faf5ff 100%);
+    border: 1px solid var(--blue-m);
+    border-radius: var(--radius);
+    padding: 40px 40px 36px;
+    margin-bottom: 72px;
+  }
+  .hero-stats { display: flex; gap: 32px; margin-top: 28px; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 28px; font-weight: 800; color: var(--blue); line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .card-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 12px;
+  }
+
+  /* ─── Token table ─── */
+  .tok-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+  .tok-table th {
+    background: var(--gray-800); color: #fff;
+    padding: 10px 14px; text-align: center; font-size: 12px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .tok-table th:first-child { text-align: left; border-radius: 8px 0 0 0; }
+  .tok-table th:last-child { border-radius: 0 8px 0 0; }
+  .tok-table td { padding: 9px 14px; border-bottom: 1px solid var(--gray-100); text-align: center; }
+  .tok-table td:first-child { text-align: left; font-weight: 600; }
+  .tok-table tr:last-child td { border-bottom: none; }
+  .tok-table tr:hover td { background: var(--gray-50); }
+  .badge-tok {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--blue-l); color: var(--blue-d);
+    font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+    min-width: 40px;
+  }
+  .size-cell { font-weight: 700; color: var(--gray-800); }
+  .lh-cell { color: var(--teal); font-weight: 500; }
+  .ls-cell { color: var(--indigo); font-weight: 500; }
+
+  /* ─── Breakpoint demo ─── */
+  .bp-demo {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0;
+    border: 1px solid var(--gray-200); border-radius: var(--radius);
+    overflow: hidden; margin-bottom: 20px;
+  }
+  .bp-col {
+    padding: 24px 20px;
+    border-right: 1px solid var(--gray-200);
+  }
+  .bp-col:last-child { border-right: none; }
+  .bp-col.highlight { background: var(--blue-l); }
+  .bp-label {
+    font-size: 11px; font-weight: 700; color: var(--gray-400);
+    text-transform: uppercase; letter-spacing: .8px; margin-bottom: 12px;
+  }
+  .bp-display { font-weight: 800; color: var(--gray-900); line-height: 1.2; margin-bottom: 6px; }
+  .bp-body { font-size: 13px; color: var(--gray-500); line-height: 1.5; margin-bottom: 10px; }
+  .bp-spec { font-size: 11px; color: var(--gray-400); font-family: monospace; }
+
+  /* ─── Flow diagram (SVG) ─── */
+  .diagram { margin: 24px 0; }
+
+  /* ─── Steps ─── */
+  .steps { counter-reset: step; margin-bottom: 24px; }
+  .step {
+    display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start;
+  }
+  .step-num {
+    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+    background: var(--blue); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; margin-top: 2px;
+  }
+  .step-content h3 { margin-bottom: 6px; }
+  .step-content p { margin-bottom: 0; font-size: 14px; }
+
+  /* ─── Feature tags ─── */
+  .feature-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .feature-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 16px; background: var(--gray-50);
+    border: 1px solid var(--gray-200); border-radius: 10px;
+  }
+  .feature-icon {
+    flex-shrink: 0; width: 36px; height: 36px;
+    background: var(--blue-l); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .feature-text h3 { font-size: 14px; margin-bottom: 3px; }
+  .feature-text p { font-size: 13px; color: var(--gray-500); margin-bottom: 0; }
+
+  /* ─── FAQ ─── */
+  .faq-item {
+    border: 1px solid var(--gray-200);
+    border-radius: 10px; margin-bottom: 10px; overflow: hidden;
+  }
+  .faq-q {
+    padding: 16px 20px; cursor: pointer; user-select: none;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    font-weight: 600; font-size: 14px; color: var(--gray-800);
+    background: #fff; transition: background .15s;
+  }
+  .faq-q:hover { background: var(--gray-50); }
+  .faq-icon { color: var(--blue); font-size: 18px; flex-shrink: 0; transition: transform .2s; }
+  .faq-item.open .faq-icon { transform: rotate(45deg); }
+  .faq-a {
+    display: none; padding: 0 20px 16px;
+    font-size: 14px; color: var(--gray-600); line-height: 1.7;
+    border-top: 1px solid var(--gray-100);
+  }
+  .faq-a p:last-child { margin-bottom: 0; }
+  .faq-item.open .faq-a { display: block; }
+
+  /* ─── Callout ─── */
+  .callout {
+    display: flex; gap: 12px; padding: 16px 20px;
+    border-radius: 10px; margin-bottom: 20px; font-size: 14px;
+  }
+  .callout.info { background: var(--blue-l); border: 1px solid var(--blue-m); }
+  .callout.warn { background: #fff7ed; border: 1px solid #fed7aa; }
+  .callout.tip  { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .callout p { margin-bottom: 0; }
+
+  /* ─── Pill tags ─── */
+  .pill {
+    display: inline-block; padding: 2px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+  }
+  .pill-blue   { background: var(--blue-l);  color: var(--blue-d); }
+  .pill-green  { background: #dcfce7; color: #15803d; }
+  .pill-orange { background: #fff7ed; color: #c2410c; }
+  .pill-purple { background: #f5f3ff; color: #7c3aed; }
+
+  /* ─── Divider ─── */
+  .divider { border: none; border-top: 1px solid var(--gray-200); margin: 48px 0; }
+
+  /* ─── Code block ─── */
+  .code-block {
+    background: var(--gray-900); color: #e2e8f0;
+    border-radius: 10px; padding: 20px 24px;
+    font-family: 'Courier New', monospace; font-size: 13px;
+    line-height: 1.7; margin-bottom: 20px; overflow-x: auto;
+  }
+  .code-block .cm { color: #64748b; }
+  .code-block .ck { color: #7dd3fc; }
+  .code-block .cv { color: #86efac; }
+  .code-block .cs { color: #fca5a5; }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .content { padding: 32px 24px; }
+    .card-grid { grid-template-columns: 1fr; }
+    .bp-demo { grid-template-columns: 1fr; }
+    .bp-col { border-right: none; border-bottom: 1px solid var(--gray-200); }
+    .hero-stats { flex-wrap: wrap; gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<!-- ─── Sidebar ─── -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect width="14" height="14" rx="3" fill="white" fill-opacity=".3"/><path d="M3 4h8M3 7h8M3 10h5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Typography DS
+    </div>
+    <span class="version">Plugin Figma · v2.0</span>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-label">Tổng quan</span>
+    <a class="nav-link" href="#intro">Giới thiệu</a>
+    <a class="nav-link" href="#tokens">Nguyên lý Tokens</a>
+    <a class="nav-link" href="#responsive">Typography responsive</a>
+  </div>
+  <div class="nav-section">
+    <span class="nav-label">Sử dụng</span>
+    <a class="nav-link" href="#features">Tính năng</a>
+    <a class="nav-link" href="#howto">Hướng dẫn</a>
+    <a class="nav-link" href="#faq">Hỏi &amp; Đáp</a>
+  </div>
+</nav>
+
+<!-- ─── Main content ─── -->
+<main class="content">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="section-tag">Figma Plugin</div>
+    <h1>Typography DS</h1>
+    <p style="font-size:17px; color:var(--gray-600); max-width:540px;">
+      Tự động hoá toàn bộ hệ thống chữ — từ biến số Figma, text styles cho đến gán styles — chỉ với một cú click, cho cả 3 breakpoint cùng lúc.
+    </p>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">3</div>
+        <div class="stat-label">Breakpoints</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">8</div>
+        <div class="stat-label">Size tokens</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">46</div>
+        <div class="stat-label">Text styles</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">1</div>
+        <div class="stat-label">Click để làm tất cả</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ GIỚI THIỆU ═══ -->
+  <div class="section">
+    <a class="section-anchor" id="intro"></a>
+    <div class="section-tag">Giới thiệu</div>
+    <h2>Plugin làm được gì?</h2>
+    <p>
+      Khi xây dựng design system, một trong những việc tốn thời gian nhất là duy trì typography nhất quán và responsive. Mỗi khi thay đổi token (ví dụ tăng font size Body lên 1px), bạn phải cập nhật thủ công hàng chục text styles, rồi gán lại cho hàng trăm text node — và làm lại 3 lần cho 3 breakpoint.
+    </p>
+    <p>
+      <strong>Typography DS</strong> giải quyết toàn bộ việc đó bằng cách kết hợp hai tính năng của Figma:
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon" style="background:#eff6ff;">📐</div>
+        <h3>Figma Variables</h3>
+        <p style="font-size:14px; color:var(--gray-600); margin-bottom:0;">Lưu giá trị fontSize theo từng breakpoint. Khi chuyển mode 1280→1920, toàn bộ font size tự động scale đúng theo thiết kế.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#f0fdf4;">🎨</div>
+        <h3>Text Styles</h3>
+        <p style="font-size:14px; color:var(--gray-600); margin-bottom:0;">Đặt tên, phân nhóm và lock toàn bộ thuộc tính (size, weight, line-height, letter-spacing) cho designer dùng từ bảng Styles.</p>
+      </div>
+    </div>
+
+    <!-- SVG: Architecture diagram -->
+    <div class="diagram">
+      <svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" style="width:100%; border-radius:12px; background:#f9fafb; border:1px solid #e5e7eb;">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#3b82f6"/>
+          </marker>
+        </defs>
+
+        <!-- Box 1: Token -->
+        <rect x="20" y="30" width="140" height="100" rx="10" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+        <text x="90" y="55" text-anchor="middle" font-family="Inter,Arial" font-size="11" font-weight="700" fill="#1e40af">TOKEN</text>
+        <text x="90" y="75" text-anchor="middle" font-family="monospace" font-size="12" fill="#3b82f6">size/2xl</text>
+        <text x="90" y="93" text-anchor="middle" font-family="monospace" font-size="11" fill="#64748b">1280 → 22px</text>
+        <text x="90" y="108" text-anchor="middle" font-family="monospace" font-size="11" fill="#64748b">1440 → 24px</text>
+        <text x="90" y="123" text-anchor="middle" font-family="monospace" font-size="11" fill="#64748b">1920 → 28px</text>
+
+        <!-- Arrow 1 -->
+        <line x1="164" y1="80" x2="200" y2="80" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="182" y="72" text-anchor="middle" font-family="Inter,Arial" font-size="10" fill="#9ca3af">bind</text>
+
+        <!-- Box 2: Variable -->
+        <rect x="204" y="30" width="160" height="100" rx="10" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+        <text x="284" y="55" text-anchor="middle" font-family="Inter,Arial" font-size="11" font-weight="700" fill="#5b21b6">VARIABLE</text>
+        <text x="284" y="75" text-anchor="middle" font-family="monospace" font-size="12" fill="#6d28d9">Typography</text>
+        <text x="284" y="93" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">Mode: 1280 = 22px</text>
+        <text x="284" y="108" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">Mode: 1440 = 24px</text>
+        <text x="284" y="123" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">Mode: 1920 = 28px</text>
+
+        <!-- Arrow 2 -->
+        <line x1="368" y1="80" x2="404" y2="80" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="386" y="72" text-anchor="middle" font-family="Inter,Arial" font-size="10" fill="#9ca3af">bind</text>
+
+        <!-- Box 3: Text Style -->
+        <rect x="408" y="30" width="140" height="100" rx="10" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+        <text x="478" y="55" text-anchor="middle" font-family="Inter,Arial" font-size="11" font-weight="700" fill="#9a3412">TEXT STYLE</text>
+        <text x="478" y="75" text-anchor="middle" font-family="Inter,Arial" font-size="12" font-weight="600" fill="#c2410c">Display</text>
+        <text x="478" y="93" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">fontSize → variable</text>
+        <text x="478" y="108" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">lh: 130%</text>
+        <text x="478" y="123" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">weight: Bold</text>
+
+        <!-- Arrow 3 -->
+        <line x1="552" y1="80" x2="588" y2="80" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="570" y="72" text-anchor="middle" font-family="Inter,Arial" font-size="10" fill="#9ca3af">apply</text>
+
+        <!-- Box 4: Node -->
+        <rect x="592" y="30" width="112" height="100" rx="10" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+        <text x="648" y="55" text-anchor="middle" font-family="Inter,Arial" font-size="11" font-weight="700" fill="#14532d">TEXT NODE</text>
+        <text x="648" y="80" text-anchor="middle" font-family="Inter,Arial" font-size="22" font-weight="800" fill="#166534">Ag</text>
+        <text x="648" y="105" text-anchor="middle" font-family="Inter,Arial" font-size="10" fill="#64748b">responsive</text>
+        <text x="648" y="120" text-anchor="middle" font-family="Inter,Arial" font-size="10" fill="#64748b">auto-assigned</text>
+      </svg>
+    </div>
+    <p style="font-size:13px; color:var(--gray-400); text-align:center; margin-top:-12px; margin-bottom:20px;">Chuỗi liên kết: Token → Variable → Text Style → Text Node</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ TOKENS ═══ -->
+  <div class="section">
+    <a class="section-anchor" id="tokens"></a>
+    <div class="section-tag">Nguyên lý</div>
+    <h2>Hệ thống Tokens</h2>
+    <p>
+      Thay vì dùng giá trị pixel cụ thể (ví dụ <code>fontSize: 14px</code>), typography token là <strong>tên ngữ nghĩa</strong> đại diện cho một cấp độ trong thang chữ. Plugin dùng 8 tokens từ nhỏ đến lớn:
+    </p>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px;">
+      <span class="pill pill-blue">2xs</span>
+      <span class="pill pill-blue">xs</span>
+      <span class="pill pill-blue">sm</span>
+      <span class="pill pill-blue">base</span>
+      <span class="pill pill-blue">md</span>
+      <span class="pill pill-blue">lg</span>
+      <span class="pill pill-blue">xl</span>
+      <span class="pill pill-blue">2xl</span>
+    </div>
+
+    <p>Mỗi token giữ <strong>3 giá trị</strong> — một cho mỗi breakpoint — thay vì một giá trị cố định. Đây là toàn bộ bảng giá trị mặc định:</p>
+
+    <div style="overflow-x:auto; border-radius:12px; border:1px solid var(--gray-200); box-shadow:var(--shadow);">
+      <table class="tok-table">
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Size 1280</th><th>Size 1440</th><th>Size 1920</th>
+            <th>LH 1280</th><th>LH 1440</th><th>LH 1920</th>
+            <th>LS (px)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge-tok">2xs</span></td><td class="size-cell">10</td><td class="size-cell">10</td><td class="size-cell">11</td><td class="lh-cell">16</td><td class="lh-cell">16</td><td class="lh-cell">16</td><td class="ls-cell">0</td></tr>
+          <tr><td><span class="badge-tok">xs</span></td><td class="size-cell">11</td><td class="size-cell">11</td><td class="size-cell">12</td><td class="lh-cell">16</td><td class="lh-cell">16</td><td class="lh-cell">18</td><td class="ls-cell">0</td></tr>
+          <tr><td><span class="badge-tok">sm</span></td><td class="size-cell">11</td><td class="size-cell">12</td><td class="size-cell">13</td><td class="lh-cell">16</td><td class="lh-cell">18</td><td class="lh-cell">20</td><td class="ls-cell">0</td></tr>
+          <tr><td><span class="badge-tok">base</span></td><td class="size-cell">13</td><td class="size-cell">14</td><td class="size-cell">16</td><td class="lh-cell">20</td><td class="lh-cell">22</td><td class="lh-cell">24</td><td class="ls-cell">0</td></tr>
+          <tr><td><span class="badge-tok">md</span></td><td class="size-cell">14</td><td class="size-cell">15</td><td class="size-cell">17</td><td class="lh-cell">20</td><td class="lh-cell">22</td><td class="lh-cell">26</td><td class="ls-cell">0</td></tr>
+          <tr><td><span class="badge-tok">lg</span></td><td class="size-cell">16</td><td class="size-cell">16</td><td class="size-cell">18</td><td class="lh-cell">24</td><td class="lh-cell">24</td><td class="lh-cell">28</td><td class="ls-cell">0</td></tr>
+          <tr><td><span class="badge-tok">xl</span></td><td class="size-cell">18</td><td class="size-cell">20</td><td class="size-cell">22</td><td class="lh-cell">28</td><td class="lh-cell">30</td><td class="lh-cell">34</td><td class="ls-cell">−0.2/−0.3/−0.4</td></tr>
+          <tr><td><span class="badge-tok">2xl</span></td><td class="size-cell">22</td><td class="size-cell">24</td><td class="size-cell">28</td><td class="lh-cell">32</td><td class="lh-cell">36</td><td class="lh-cell">42</td><td class="ls-cell">−0.4/−0.5/−0.6</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13px; color:var(--gray-400);">Size và LH tính bằng <strong>px</strong>. Letter Spacing (LS) tính bằng <strong>px</strong>, âm = thu hẹp khoảng cách. LH% trong text style được tính tương đối với fontSize.</p>
+
+    <h3 style="margin-top:28px;">Tại sao dùng Line Height theo px?</h3>
+    <p>Line height lưu theo <strong>px tuyệt đối</strong> trong biến số Figma (để scale theo breakpoint), nhưng khi gán vào text style, plugin chuyển về <strong>%</strong> — ví dụ <code>base</code> tại 1280: LH 20px / Size 13px ≈ <strong>154%</strong>. Giá trị % này tự scale tỉ lệ khi font size thay đổi, không cần biến số riêng.</p>
+
+    <h3>Tại sao Letter Spacing không có biến số riêng?</h3>
+    <p>LS cũng lưu theo <strong>%</strong> trong text style (ví dụ <code>8%</code> cho Overline). Cách này tự scale theo size mà không cần thêm variable, giữ collection gọn và dễ quản lý.</p>
+
+    <div class="callout info">
+      <div class="callout-icon">💡</div>
+      <p>Bạn có thể thay đổi toàn bộ giá trị trong bảng này từ tab <strong>Tokens</strong> của plugin — không cần sửa code.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ RESPONSIVE ═══ -->
+  <div class="section">
+    <a class="section-anchor" id="responsive"></a>
+    <div class="section-tag">Responsive Typography</div>
+    <h2>Cùng 1 tiêu đề, 3 kích cỡ khác nhau</h2>
+    <p>
+      Tính năng cốt lõi: text style <strong>Display</strong> dùng một token duy nhất (<code>2xl</code>), nhưng font size tự động đổi theo breakpoint nhờ Figma Variable Mode:
+    </p>
+
+    <div class="bp-demo">
+      <div class="bp-col">
+        <div class="bp-label">📱 1280px</div>
+        <div class="bp-display" style="font-size:22px;">Tờ trình<br>phê duyệt</div>
+        <div class="bp-body">Nội dung văn bản thông thường hiển thị ở đây với kích cỡ phù hợp.</div>
+        <div class="bp-spec">Display: 22px / Bold<br>Body: 13px / Regular<br>LH: 130% / 154%</div>
+      </div>
+      <div class="bp-col highlight">
+        <div class="bp-label" style="color:var(--blue);">🖥 1440px · phổ biến nhất</div>
+        <div class="bp-display" style="font-size:26px;">Tờ trình<br>phê duyệt</div>
+        <div class="bp-body">Nội dung văn bản thông thường hiển thị ở đây với kích cỡ phù hợp.</div>
+        <div class="bp-spec">Display: 24px / Bold<br>Body: 14px / Regular<br>LH: 130% / 157%</div>
+      </div>
+      <div class="bp-col">
+        <div class="bp-label">🖥 1920px</div>
+        <div class="bp-display" style="font-size:30px;">Tờ trình<br>phê duyệt</div>
+        <div class="bp-body">Nội dung văn bản thông thường hiển thị ở đây với kích cỡ phù hợp.</div>
+        <div class="bp-spec">Display: 28px / Bold<br>Body: 16px / Regular<br>LH: 130% / 150%</div>
+      </div>
+    </div>
+
+    <h3>Cơ chế hoạt động trong Figma</h3>
+    <p>Plugin thực hiện 3 bước để tạo typography responsive:</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Tạo Variable Collection "Typography"</h3>
+          <p>Collection có 3 Mode: <code>1280</code> / <code>1440</code> / <code>1920</code>. Mỗi token như <code>size/2xl</code> được tạo thành 1 FLOAT variable với 3 giá trị — một cho mỗi mode.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Tạo Text Styles, bind fontSize vào Variable</h3>
+          <p>Text style <code>Display</code> có <code>fontSize</code> được bind vào variable <code>size/2xl</code>. Nhờ vậy, khi frame chuyển sang mode 1920, text style tự động dùng giá trị 28px thay vì 22px.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Đặt Variable Mode cho frame</h3>
+          <p>Plugin gọi <code>setExplicitVariableModeForCollection</code> trên frame, đặt frame về mode <code>1280</code>. Khi nhân bản frame cho breakpoint 1440/1920, clone được đặt sang mode tương ứng.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SVG: Mode switching visual -->
+    <div class="diagram">
+      <svg viewBox="0 0 700 140" xmlns="http://www.w3.org/2000/svg" style="width:100%; border-radius:12px; background:#f9fafb; border:1px solid #e5e7eb;">
+        <defs>
+          <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#6366f1"/>
+          </marker>
+        </defs>
+
+        <!-- Variable collection -->
+        <rect x="20" y="20" width="170" height="100" rx="10" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+        <text x="105" y="42" text-anchor="middle" font-family="Inter,Arial" font-size="10" font-weight="700" fill="#5b21b6" letter-spacing="0.5">VARIABLE COLLECTION</text>
+        <text x="105" y="60" text-anchor="middle" font-family="Inter,Arial" font-size="11" font-weight="600" fill="#6d28d9">Typography</text>
+        <line x1="30" y1="68" x2="180" y2="68" stroke="#ddd6fe" stroke-width="1"/>
+        <text x="105" y="82" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">size/2xl[1280] = 22</text>
+        <text x="105" y="96" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">size/2xl[1440] = 24</text>
+        <text x="105" y="110" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">size/2xl[1920] = 28</text>
+
+        <!-- Arrows to 3 frames -->
+        <line x1="194" y1="70" x2="234" y2="50" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <line x1="194" y1="75" x2="234" y2="75" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <line x1="194" y1="80" x2="234" y2="100" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <text x="214" y="66" text-anchor="middle" font-family="Inter,Arial" font-size="9" fill="#a5b4fc">mode</text>
+
+        <!-- Frame 1280 -->
+        <rect x="238" y="22" width="130" height="55" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+        <text x="303" y="40" text-anchor="middle" font-family="Inter,Arial" font-size="10" font-weight="700" fill="#1d4ed8">FRAME · Mode 1280</text>
+        <text x="303" y="56" text-anchor="middle" font-family="Inter,Arial" font-size="16" font-weight="800" fill="#1e40af">22px</text>
+        <text x="303" y="70" text-anchor="middle" font-family="Inter,Arial" font-size="9" fill="#93c5fd">Display</text>
+
+        <!-- Frame 1440 -->
+        <rect x="238" y="52" width="130" height="55" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+        <text x="303" y="70" text-anchor="middle" font-family="Inter,Arial" font-size="10" font-weight="700" fill="#1d4ed8">FRAME · Mode 1440</text>
+        <text x="303" y="86" text-anchor="middle" font-family="Inter,Arial" font-size="18" font-weight="800" fill="#2563eb">24px</text>
+        <text x="303" y="100" text-anchor="middle" font-family="Inter,Arial" font-size="9" fill="#3b82f6">Display ★</text>
+
+        <!-- Frame 1920 -->
+        <rect x="238" y="82" width="130" height="55" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+        <text x="303" y="100" text-anchor="middle" font-family="Inter,Arial" font-size="10" font-weight="700" fill="#1d4ed8">FRAME · Mode 1920</text>
+        <text x="303" y="116" text-anchor="middle" font-family="Inter,Arial" font-size="20" font-weight="800" fill="#1e3a8a">28px</text>
+        <text x="303" y="130" text-anchor="middle" font-family="Inter,Arial" font-size="9" fill="#93c5fd">Display</text>
+
+        <!-- Arrow to explanation -->
+        <line x1="374" y1="75" x2="414" y2="75" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+        <!-- Result box -->
+        <rect x="418" y="22" width="262" height="96" rx="10" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+        <text x="549" y="44" text-anchor="middle" font-family="Inter,Arial" font-size="10" font-weight="700" fill="#14532d">KẾT QUẢ</text>
+        <text x="549" y="64" text-anchor="middle" font-family="Inter,Arial" font-size="12" fill="#166534">Cùng text style "Display"</text>
+        <text x="549" y="82" text-anchor="middle" font-family="Inter,Arial" font-size="12" fill="#166534">hiển thị 22 / 24 / 28px</text>
+        <text x="549" y="100" text-anchor="middle" font-family="Inter,Arial" font-size="11" fill="#4ade80">tự động theo Variable Mode</text>
+      </svg>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-icon">✅</div>
+      <p>Với cách này, designer chỉ cần chọn <strong>"FAN Font/Display"</strong> từ bảng Styles — font size sẽ tự đúng cho dù đang ở frame nào. Không cần nhớ giá trị pixel, không bao giờ bị sai breakpoint.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ TÍNH NĂNG ═══ -->
+  <div class="section">
+    <a class="section-anchor" id="features"></a>
+    <div class="section-tag">Tính năng</div>
+    <h2>Các tính năng của plugin</h2>
+
+    <h3 style="margin-bottom:12px;">Tab Chuẩn hoá</h3>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-text">
+          <h3>Multi-frame selection</h3>
+          <p>Chọn nhiều frame cùng lúc bằng checkbox. Nút "Chọn tất cả" / "Bỏ chọn tất cả". Plugin chạy setup 1 lần, gán styles cho từng frame — báo cáo riêng cho từng frame.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-text">
+          <h3>Chuẩn hoá 1-click</h3>
+          <p>Một nút làm tất cả: tạo/update biến số Figma → tạo/update 46 text styles → tự động gán style cho từng text node trong frame dựa trên font size và weight.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🔄</div>
+        <div class="feature-text">
+          <h3>Nhân bản frame theo breakpoint</h3>
+          <p>Tự động clone frame hiện tại sang 1440 và/hoặc 1920px, resize, đặt Variable Mode phù hợp. Frames được xếp cạnh nhau, sẵn sàng để thiết kế.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📋</div>
+        <div class="feature-text">
+          <h3>Tạo bản Guidelines</h3>
+          <p>Tự động render bảng typography spec — hiển thị tất cả 8 tokens với size, line height, letter spacing ở cả 3 breakpoint kèm text mẫu. Dùng để onboard designer mới.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">↻</div>
+        <div class="feature-text">
+          <h3>Refresh danh sách frame</h3>
+          <p>Nút ↻ cạnh danh sách frame — cập nhật frame mới được tạo hoặc paste vào page mà không cần restart plugin. Giữ lại selection hiện tại.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:12px; margin-top:28px;">Tab Tokens</h3>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-icon">✏️</div>
+        <div class="feature-text">
+          <h3>Chỉnh sửa token values</h3>
+          <p>Bảng edit inline: Font Size, Line Height (px), Letter Spacing (px) — mỗi bảng 8 token × 3 breakpoint. Bấm Apply để áp dụng ngay vào Figma.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🗂</div>
+        <div class="feature-text">
+          <h3>CRUD style definitions</h3>
+          <p>Xem, sửa, thêm, xoá 46 text style definitions ngay trong plugin. Chia thành 10 nhóm (Page, Body, Form, Table, Button...). Mỗi style có đủ: name, token, weight, lh%, ls%, textCase, mono.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">💾</div>
+        <div class="feature-text">
+          <h3>Lưu trữ trong file Figma</h3>
+          <p>Dữ liệu token và style được lưu bằng <code>figma.root.setPluginData</code> — nằm trong file Figma, tất cả thành viên trong team đều đọc/ghi được khi mở file.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🔁</div>
+        <div class="feature-text">
+          <h3>Reset về mặc định</h3>
+          <p>Khôi phục cả bảng token lẫn toàn bộ style definitions về giá trị hardcoded gốc. Hữu ích khi thử nghiệm xong muốn quay về baseline.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ HƯỚNG DẪN ═══ -->
+  <div class="section">
+    <a class="section-anchor" id="howto"></a>
+    <div class="section-tag">Hướng dẫn</div>
+    <h2>Cách sử dụng</h2>
+
+    <h3>Lần đầu sử dụng</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Load plugin vào Figma</h3>
+          <p>Mở Figma → <strong>Plugins → Development → Import plugin from manifest</strong> → chọn file <code>plugin/manifest.json</code> trong thư mục repo.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Nhập tên nhóm styles</h3>
+          <p>Ô <strong>Nhóm</strong> ở đầu plugin — mặc định là <code>FAN Font</code>. Tên này là prefix cho tất cả styles, ví dụ <code>FAN Font/Body/Default</code>. Thay đổi tuỳ dự án.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Chọn frame và bấm Chuẩn hoá</h3>
+          <p>Chọn một hoặc nhiều frame từ danh sách (tick checkbox), bấm <strong>Chuẩn hoá</strong>. Plugin sẽ: tạo variables → tạo 46 text styles → gán styles cho tất cả text node trong frame.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h3>(Tuỳ chọn) Nhân bản frame</h3>
+          <p>Tích <strong>Nhân bản frame theo breakpoint</strong>, chọn 1440 / 1920. Plugin clone frame, resize và đặt Variable Mode đúng breakpoint. Mỗi frame sẽ hiển thị font size đúng màn hình của nó.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:28px;">Thay đổi giá trị token</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Mở Tab Tokens → Font Size</h3>
+          <p>Sửa các ô trong bảng Font Size / Line Height / Letter Spacing. Ví dụ tăng <code>base</code> tại 1440 từ 14px lên 15px.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Bấm Apply ngay</h3>
+          <p>Plugin lưu data vào file Figma, cập nhật tất cả Figma Variables và tạo lại 46 text styles với giá trị mới. Các frame đang dùng styles đó sẽ tự cập nhật.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:28px;">Thêm hoặc xoá một text style</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Mở Tab Tokens → Styles → mở nhóm tương ứng</h3>
+          <p>Ví dụ muốn thêm style mới vào nhóm Body, mở sub-accordion <strong>Body</strong>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Bấm "+ Thêm style" hoặc nhấn ✕ để xoá</h3>
+          <p>Điền tên, chọn token, weight, lh%, ls%. Nút <strong>M</strong> bật monospace font (Courier New). Nút <strong>Aa/AA</strong> bật uppercase text case.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Bấm Apply ngay</h3>
+          <p>Style mới được tạo trong Figma. Style bị xoá sẽ bị remove khỏi Local Styles (chú ý: text node nào đang dùng style đó sẽ mất style assignment).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-icon">⚠️</div>
+      <p><strong>Lưu ý:</strong> Khi xoá một style và bấm Apply, style đó bị xoá khỏi Figma. Các text node đang dùng style đó sẽ cần gán lại thủ công sau khi chạy Chuẩn hoá.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ FAQ ═══ -->
+  <div class="section">
+    <a class="section-anchor" id="faq"></a>
+    <div class="section-tag">Hỏi &amp; Đáp</div>
+    <h2>Câu hỏi thường gặp</h2>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Tại sao một số text node bị "bỏ qua" khi Chuẩn hoá?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Plugin bỏ qua text node khi:</p>
+        <ul>
+          <li><strong>Font không phải Arial</strong> — chỉ xử lý font mặc định của dự án (Arial). Báo cáo sẽ liệt kê tên font bị bỏ qua.</li>
+          <li><strong>Mixed font</strong> — node có nhiều font khác nhau trong cùng 1 text box (highlight từng phần).</li>
+          <li><strong>Font size không khớp bất kỳ token nào</strong> — ví dụ node có size 9px, nằm ngoài scale. Kiểm tra báo cáo "bỏ qua" để biết size cụ thể.</li>
+          <li><strong>Style chưa được tạo</strong> — nếu chạy Gán trước khi chạy Tạo styles.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Font Family có thể thay đổi trong plugin không?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Hiện tại font family (<strong>Arial</strong>) được hardcode trong <code>plugin/code.js</code>. Để đổi font, mở file và sửa 2 biến ở đầu file:</p>
+        <div class="code-block">
+          <span class="ck">var</span> <span class="cv">TARGET_FONT</span> = <span class="cs">'Arial'</span>;        <span class="cm">// font chính</span><br>
+          <span class="ck">var</span> <span class="cv">FONT_MONO</span>   = <span class="cs">'Courier New'</span>;  <span class="cm">// font cho style mono</span><br>
+          <span class="ck">var</span> <span class="cv">WEIGHT_MAP</span>  = { <span class="cs">400</span>: <span class="cs">'Regular'</span>, <span class="cs">500</span>: <span class="cs">'Bold'</span>, <span class="cs">600</span>: <span class="cs">'Bold'</span> };
+        </div>
+        <p>Arial không có Medium/SemiBold nên weight 500 và 600 đều map về Bold. Nếu dùng font khác có đủ weight, cập nhật <code>WEIGHT_MAP</code> theo.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Cả team có dùng chung cài đặt token được không?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Có. Dữ liệu token và style definitions được lưu bằng <code>figma.root.setPluginData</code> — dữ liệu nằm trong bản thân file Figma (<code>.fig</code>), không phải trên máy cá nhân. Mọi người mở cùng file đều đọc được cùng một bộ token.</p>
+        <p>Khi một thành viên thay đổi token và bấm Apply, thay đổi được lưu vào file. Thành viên khác chỉ cần mở lại plugin là thấy bộ token mới nhất.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Tại sao có 3 style giống nhau không phân biệt được (Body/Secondary, Label/Disabled, Input/Placeholder)?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Ba styles này có cùng font size, weight và line height với variant Default của chúng — chúng chỉ khác <strong>màu chữ</strong>, mà màu sắc không thể tự động detect từ typography token.</p>
+        <p>Plugin sẽ gán chúng về variant Default (ví dụ <code>Body/Default</code> thay vì <code>Body/Secondary</code>). Bạn cần gán thủ công cho những node cần dùng Secondary/Disabled/Placeholder.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Bấm Chuẩn hoá nhiều lần có bị ghi đè hay tạo duplicate không?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Không. Tất cả thao tác đều <strong>idempotent</strong>:</p>
+        <ul>
+          <li>Variable Collection "Typography" đã tồn tại → tái sử dụng, cập nhật giá trị.</li>
+          <li>Text style đã tồn tại cùng tên → cập nhật, không tạo mới.</li>
+          <li>Text node đã có style → override sang style mới (nếu khớp).</li>
+        </ul>
+        <p>An toàn để chạy lại bất kỳ lúc nào sau khi thay đổi token hoặc thêm text node mới vào frame.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Nhân bản frame tạo ra frame ở đâu? Có ảnh hưởng đến frame gốc không?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Frame clone được đặt <strong>ngay bên phải</strong> frame gốc (cách nhau 80px), cùng Y position. Tên frame là tên breakpoint: <code>1440</code>, <code>1920</code>.</p>
+        <p>Nếu đã có frame tên <code>1440</code> / <code>1920</code> từ lần chạy trước, plugin <strong>xoá và tạo lại</strong> để tránh duplicate. Frame gốc (<code>1280</code>) không bị ảnh hưởng.</p>
+        <p>Tính năng nhân bản chỉ áp dụng cho <strong>frame đầu tiên</strong> khi chọn nhiều frame.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Muốn reset về giá trị gốc sau khi đã chỉnh token thì làm sao?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Tab <strong>Tokens</strong> → nút <strong>"Reset về default"</strong> ở footer. Thao tác này:</p>
+        <ul>
+          <li>Xoá dữ liệu đã lưu trong file Figma.</li>
+          <li>Khôi phục toàn bộ bảng Font Size, Line Height, Letter Spacing về giá trị hardcoded.</li>
+          <li>Khôi phục toàn bộ 46 style definitions về mặc định.</li>
+          <li>Cập nhật giao diện ngay lập tức.</li>
+        </ul>
+        <p>Bạn cần bấm <strong>Apply ngay</strong> thêm một lần nữa để áp dụng giá trị gốc vào Figma Variables và Text Styles.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Node.js scripts (read-file.js, apply-styles.js) dùng để làm gì?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Đây là các script phụ trợ chạy ngoài Figma qua REST API, chỉ dùng để <strong>phân tích và báo cáo</strong>:</p>
+        <ul>
+          <li><code>node read-file.js</code> — liệt kê tất cả text node, font size, styles hiện có trong file.</li>
+          <li><code>node apply-styles.js</code> — mô phỏng quá trình match style, báo cáo node nào sẽ được gán style gì (read-only, không thay đổi Figma).</li>
+        </ul>
+        <p>Figma REST API <strong>không hỗ trợ PATCH</strong> để gán <code>textStyleId</code> cho node — việc gán styles thực sự chỉ làm được qua plugin. Cần tạo file <code>.env</code> với <code>FIGMA_TOKEN</code> và <code>FIGMA_FILE_KEY</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="border-top: 1px solid var(--gray-200); padding-top: 32px; margin-top: 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div>
+      <div style="font-weight:700; color:var(--gray-800); margin-bottom:4px;">Typography DS Plugin</div>
+      <div style="font-size:13px; color:var(--gray-400);">Font: Arial · 3 breakpoints · 8 tokens · 46 styles</div>
+    </div>
+    <a href="https://github.com/29kiendev/figma-ds" target="_blank"
+       style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:var(--gray-900); color:#fff; border-radius:8px; font-size:13px; font-weight:600; text-decoration:none;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </div>
+
+</main>
+</div>
+
+<script>
+  function toggleFaq(el) {
+    el.parentElement.classList.toggle('open');
+  }
+
+  // Active nav link on scroll
+  var sections = document.querySelectorAll('.section-anchor');
+  var navLinks = document.querySelectorAll('.nav-link');
+
+  function updateNav() {
+    var scrollY = window.scrollY + 120;
+    var current = '';
+    sections.forEach(function(s) {
+      if (s.offsetTop <= scrollY) current = s.id;
+    });
+    navLinks.forEach(function(link) {
+      var href = link.getAttribute('href').slice(1);
+      link.classList.toggle('active', href === current);
+    });
+  }
+
+  window.addEventListener('scroll', updateNav, { passive: true });
+  updateNav();
+</script>
+</body>
+</html>
