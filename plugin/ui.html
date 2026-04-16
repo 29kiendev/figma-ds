@@ -47,6 +47,7 @@
     accent-color: #3b82f6;
     cursor: pointer;
     flex-shrink: 0;
+    pointer-events: none;
   }
   .checkbox-row label { cursor: pointer; line-height: 1.4; }
   .bp-group {
@@ -124,26 +125,24 @@
   </select>
 </div>
 
-<hr class="divider">
-
-<!-- Action 1: Standardize -->
+<!-- Group name -->
 <div class="section">
-  <div class="checkbox-row" onclick="toggle('action-std')">
-    <input type="checkbox" id="action-std" checked>
-    <label>Chuẩn hóa font theo guidelines</label>
-  </div>
+  <div class="section-title">Tên nhóm styles</div>
+  <input type="text" id="group-name" value="FAN Font" maxlength="30" placeholder="FAN Font"
+    style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none;">
 </div>
 
-<!-- Action 2: Duplicate -->
+<hr class="divider">
+
+<!-- Tuỳ chọn thêm -->
 <div class="section">
+  <div class="section-title">Tuỳ chọn</div>
+
   <div class="checkbox-row" onclick="toggle('action-dup')">
-    <input type="checkbox" id="action-dup" checked>
+    <input type="checkbox" id="action-dup">
     <label>Nhân bản frame theo breakpoint</label>
   </div>
-  <div class="bp-group" id="bp-group">
-    <div class="bp-chip active" id="chip-1280" onclick="toggleChip('1280')">
-      <input type="checkbox" id="bp-1280" checked> 1280
-    </div>
+  <div class="bp-group hidden" id="bp-group">
     <div class="bp-chip active" id="chip-1440" onclick="toggleChip('1440')">
       <input type="checkbox" id="bp-1440" checked> 1440
     </div>
@@ -151,15 +150,12 @@
       <input type="checkbox" id="bp-1920" checked> 1920
     </div>
   </div>
-</div>
 
-<!-- Action 3: Guideline -->
-<div class="section">
   <div class="checkbox-row" onclick="toggle('action-guide')">
-    <input type="checkbox" id="action-guide" checked>
+    <input type="checkbox" id="action-guide">
     <label>Tạo bản Guidelines</label>
   </div>
-  <div class="sample-group" id="sample-group">
+  <div class="sample-group hidden" id="sample-group">
     <input type="text" id="sample-text" value="Ag" maxlength="10" placeholder="Ag">
     <div class="sample-hint">Text mẫu hiển thị trong guidelines</div>
   </div>
@@ -167,7 +163,7 @@
 
 <hr class="divider">
 
-<button id="run-btn" onclick="run()">Chạy</button>
+<button id="run-btn" onclick="run()">Chuẩn hoá</button>
 <div id="status"></div>
 
 <script>
@@ -176,6 +172,9 @@
     el.checked = !el.checked;
     if (id === 'action-guide') {
       document.getElementById('sample-group').classList.toggle('hidden', !el.checked);
+    }
+    if (id === 'action-dup') {
+      document.getElementById('bp-group').classList.toggle('hidden', !el.checked);
     }
   }
 
@@ -191,7 +190,7 @@
     if (!frameId) { setStatus('Chọn frame trước', 'error'); return; }
 
     var breakpoints = [];
-    ['1280','1440','1920'].forEach(function(bp) {
+    ['1440','1920'].forEach(function(bp) {
       if (document.getElementById('bp-' + bp).checked) breakpoints.push(bp);
     });
 
@@ -201,13 +200,13 @@
     setStatus('');
 
     parent.postMessage({ pluginMessage: {
-      type: 'run',
-      frameId: frameId,
-      standardize: document.getElementById('action-std').checked,
-      duplicate: document.getElementById('action-dup').checked,
+      type:       'run',
+      frameId:    frameId,
+      groupName:  document.getElementById('group-name').value.trim() || 'FAN Font',
+      duplicate:  document.getElementById('action-dup').checked,
       breakpoints: breakpoints,
-      guideline: document.getElementById('action-guide').checked,
-      sampleText: document.getElementById('sample-text').value.trim() || 'Ag'
+      guideline:  document.getElementById('action-guide').checked,
+      sampleText: document.getElementById('sample-text').value.trim() || 'Ag',
     }}, '*');
   }
 
