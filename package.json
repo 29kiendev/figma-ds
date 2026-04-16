@@ -1,0 +1,8 @@
+{
+  "name": "figma-ds",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "read": "node read-file.js"
+  }
+}

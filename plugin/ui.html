@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #1a1a1a;
+    background: #fff;
+    padding: 16px;
+    width: 300px;
+  }
+  h2 { font-size: 14px; font-weight: bold; margin-bottom: 16px; color: #111; }
+  .section { margin-bottom: 16px; }
+  .section-title {
+    font-size: 11px;
+    font-weight: bold;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  select {
+    width: 100%;
+    padding: 7px 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 12px;
+    background: #fafafa;
+    color: #1a1a1a;
+    outline: none;
+    cursor: pointer;
+  }
+  select:focus { border-color: #3b82f6; }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 14px; height: 14px;
+    accent-color: #3b82f6;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .checkbox-row label { cursor: pointer; line-height: 1.4; }
+  .bp-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    padding-left: 22px;
+  }
+  .bp-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    cursor: pointer;
+    background: #fafafa;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .bp-chip.active { border-color: #3b82f6; background: #eff6ff; color: #2563eb; }
+  .bp-chip input { display: none; }
+  .sample-group {
+    margin-top: 8px;
+    padding-left: 22px;
+  }
+  .sample-group input[type="text"] {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+  }
+  .sample-group input:focus { border-color: #3b82f6; }
+  .sample-hint { font-size: 11px; color: #999; margin-top: 4px; }
+  .divider { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+  #run-btn {
+    width: 100%;
+    padding: 10px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #run-btn:hover { background: #2563eb; }
+  #run-btn:disabled { background: #93c5fd; cursor: default; }
+  #status {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #666;
+    text-align: center;
+    min-height: 16px;
+    line-height: 1.5;
+    white-space: pre-line;
+  }
+  #status.error { color: #dc2626; }
+  #status.success { color: #16a34a; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<h2>Typography DS</h2>
+
+<!-- Frame selector -->
+<div class="section">
+  <div class="section-title">Frame</div>
+  <select id="frame-select">
+    <option value="">Đang tải danh sách frame...</option>
+  </select>
+</div>
+
+<hr class="divider">
+
+<!-- Action 1: Standardize -->
+<div class="section">
+  <div class="checkbox-row" onclick="toggle('action-std')">
+    <input type="checkbox" id="action-std" checked>
+    <label>Chuẩn hóa font theo guidelines</label>
+  </div>
+</div>
+
+<!-- Action 2: Duplicate -->
+<div class="section">
+  <div class="checkbox-row" onclick="toggle('action-dup')">
+    <input type="checkbox" id="action-dup" checked>
+    <label>Nhân bản frame theo breakpoint</label>
+  </div>
+  <div class="bp-group" id="bp-group">
+    <div class="bp-chip active" id="chip-1280" onclick="toggleChip('1280')">
+      <input type="checkbox" id="bp-1280" checked> 1280
+    </div>
+    <div class="bp-chip active" id="chip-1440" onclick="toggleChip('1440')">
+      <input type="checkbox" id="bp-1440" checked> 1440
+    </div>
+    <div class="bp-chip active" id="chip-1920" onclick="toggleChip('1920')">
+      <input type="checkbox" id="bp-1920" checked> 1920
+    </div>
+  </div>
+</div>
+
+<!-- Action 3: Guideline -->
+<div class="section">
+  <div class="checkbox-row" onclick="toggle('action-guide')">
+    <input type="checkbox" id="action-guide" checked>
+    <label>Tạo bản Guidelines</label>
+  </div>
+  <div class="sample-group" id="sample-group">
+    <input type="text" id="sample-text" value="Ag" maxlength="10" placeholder="Ag">
+    <div class="sample-hint">Text mẫu hiển thị trong guidelines</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<button id="run-btn" onclick="run()">Chạy</button>
+<div id="status"></div>
+
+<script>
+  function toggle(id) {
+    var el = document.getElementById(id);
+    el.checked = !el.checked;
+    if (id === 'action-guide') {
+      document.getElementById('sample-group').classList.toggle('hidden', !el.checked);
+    }
+  }
+
+  function toggleChip(bp) {
+    var cb = document.getElementById('bp-' + bp);
+    var chip = document.getElementById('chip-' + bp);
+    cb.checked = !cb.checked;
+    chip.classList.toggle('active', cb.checked);
+  }
+
+  function run() {
+    var frameId = document.getElementById('frame-select').value;
+    if (!frameId) { setStatus('Chọn frame trước', 'error'); return; }
+
+    var breakpoints = [];
+    ['1280','1440','1920'].forEach(function(bp) {
+      if (document.getElementById('bp-' + bp).checked) breakpoints.push(bp);
+    });
+
+    var btn = document.getElementById('run-btn');
+    btn.disabled = true;
+    btn.textContent = 'Đang xử lý...';
+    setStatus('');
+
+    parent.postMessage({ pluginMessage: {
+      type: 'run',
+      frameId: frameId,
+      standardize: document.getElementById('action-std').checked,
+      duplicate: document.getElementById('action-dup').checked,
+      breakpoints: breakpoints,
+      guideline: document.getElementById('action-guide').checked,
+      sampleText: document.getElementById('sample-text').value.trim() || 'Ag'
+    }}, '*');
+  }
+
+  function setStatus(msg, cls) {
+    var el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = cls || '';
+  }
+
+  window.onmessage = function(e) {
+    var msg = e.data.pluginMessage;
+    if (!msg) return;
+
+    if (msg.type === 'frames') {
+      var sel = document.getElementById('frame-select');
+      sel.innerHTML = '';
+      if (msg.data.length === 0) {
+        sel.innerHTML = '<option value="">Không tìm thấy frame</option>';
+        return;
+      }
+      msg.data.forEach(function(f) {
+        var opt = document.createElement('option');
+        opt.value = f.id;
+        opt.textContent = (msg.data.length > 5 ? '[' + f.page + '] ' : '') + f.name + '  (' + f.w + '×' + f.h + ')';
+        if (f.name === '1280') opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    if (msg.type === 'done') {
+      var btn = document.getElementById('run-btn');
+      btn.disabled = false;
+      btn.textContent = 'Chạy';
+      setStatus(msg.text, 'success');
+    }
+
+    if (msg.type === 'error') {
+      var btn2 = document.getElementById('run-btn');
+      btn2.disabled = false;
+      btn2.textContent = 'Chạy';
+      setStatus(msg.text, 'error');
+    }
+  };
+</script>
+</body>
+</html>
