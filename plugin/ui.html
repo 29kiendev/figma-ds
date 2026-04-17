@@ -255,6 +255,8 @@
   #apply-btn { background: #3b82f6; color: #fff; }
   #apply-btn:hover { background: #2563eb; }
   #apply-btn:disabled { background: #93c5fd; cursor: default; }
+  #apply-btn.unsaved { background: #f97316; }
+  #apply-btn.unsaved:hover { background: #ea580c; }
   #reset-btn { background: #f3f4f6; color: #374151; }
   #reset-btn:hover { background: #e5e7eb; }
   #export-btn {
@@ -270,6 +272,12 @@
   }
   #demo-btn:hover { background: #ede9fe; }
   #demo-btn:disabled { background: #f3f0ff; color: #a78bfa; cursor: default; }
+  #json-export-btn, #json-import-btn {
+    flex: 1; padding: 7px; border: 1px solid #6b7280;
+    background: #f9fafb; color: #374151; border-radius: 7px;
+    font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.15s;
+  }
+  #json-export-btn:hover, #json-import-btn:hover { background: #f3f4f6; }
   #tok-status {
     flex-shrink: 0; padding: 0 16px 10px; font-size: 11px; color: #666;
     text-align: center; min-height: 14px; line-height: 1.5;
@@ -444,6 +452,11 @@
     <div class="tok-footer-row">
       <button id="export-btn" onclick="exportCSS()">Export CSS</button>
       <button id="demo-btn" onclick="createDemoPage()">Tạo trang Demo</button>
+    </div>
+    <div class="tok-footer-row">
+      <button id="json-export-btn" onclick="exportJSON()">Export JSON</button>
+      <button id="json-import-btn" onclick="document.getElementById('json-file-input').click()">Import JSON</button>
+      <input type="file" id="json-file-input" accept=".json" style="display:none" onchange="importJSON(event)">
     </div>
   </div>
   <div id="tok-status"></div>
@@ -947,8 +960,22 @@
   }
 
   // ─── Apply / Reset ────────────────────────────────────────────────
+  var _unsaved = false;
+  function markUnsaved() {
+    if (_unsaved) return;
+    _unsaved = true;
+    var btn = document.getElementById('apply-btn');
+    if (btn && !btn.disabled) { btn.classList.add('unsaved'); btn.textContent = 'Apply ngay ●'; }
+  }
+  function clearUnsaved() {
+    _unsaved = false;
+    var btn = document.getElementById('apply-btn');
+    if (btn) { btn.classList.remove('unsaved'); btn.textContent = btn.disabled ? btn.textContent : 'Apply ngay'; }
+  }
+
   function applyTokens() {
     var btn = document.getElementById('apply-btn');
+    clearUnsaved();
     btn.disabled = true; btn.textContent = 'Đang xử lý...';
     setTokStatus('');
     parent.postMessage({ pluginMessage: {
@@ -960,7 +987,40 @@
   }
 
   function resetTokens() {
+    clearUnsaved();
     parent.postMessage({ pluginMessage: { type: 'resetTokens' } }, '*');
+  }
+
+  function exportJSON() {
+    var payload = { tokenData: collectTokenData(), styleData: collectStyleData() };
+    var json = JSON.stringify(payload, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'typography-tokens.json';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    setTokStatus('✓ Đã export typography-tokens.json', 'success');
+  }
+
+  function importJSON(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var payload = JSON.parse(ev.target.result);
+        if (!payload.tokenData && !payload.styleData) throw new Error('File không hợp lệ');
+        if (payload.tokenData) { populateTokenData(payload.tokenData); }
+        if (payload.styleData) { buildStylesUI(payload.styleData); }
+        markUnsaved();
+        setTokStatus('✓ Đã import — nhấn Apply ngay để áp dụng', 'success');
+      } catch(err) {
+        setTokStatus('✗ Import lỗi: ' + err.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';  // reset input so same file can be re-imported
   }
 
   // ─── Plugin messages ──────────────────────────────────────────────
@@ -969,8 +1029,8 @@
     if (!msg) return;
 
     if (msg.type === 'frames')    { populateFrames(msg.data); }
-    if (msg.type === 'tokenData') { populateTokenData(msg.data); buildRefSizeTable(); }
-    if (msg.type === 'styleData') { buildStylesUI(msg.data); }
+    if (msg.type === 'tokenData') { populateTokenData(msg.data); buildRefSizeTable(); clearUnsaved(); }
+    if (msg.type === 'styleData') { buildStylesUI(msg.data); clearUnsaved(); }
 
     if (msg.type === 'done') {
       var btn = document.getElementById('run-btn');
@@ -1153,6 +1213,10 @@
   buildTokenRows('lh-rows',   LH_KEYS,   'lh',   false);
   buildTokenRows('ls-rows',   LS_KEYS,   'ls',   true);
   buildRefRolesTable();
+
+  // Unsaved indicator — listen to any change inside Tab 2 scroll area
+  document.getElementById('tab2-scroll').addEventListener('input',  markUnsaved);
+  document.getElementById('tab2-scroll').addEventListener('change', markUnsaved);
 </script>
 </body>
 </html>

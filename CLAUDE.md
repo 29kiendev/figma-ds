@@ -174,6 +174,18 @@ Result is copied to clipboard via `navigator.clipboard.writeText()` with `execCo
 - Section cards and divider rectangles use `layoutAlign = 'STRETCH'` to fill the BP frame width.
 - Each text node gets `textStyleId` from local styles matching `groupName + '/' + def.name`.
 - Each BP frame gets `setExplicitVariableModeForCollection` for the correct breakpoint.
+- **Text template read-back**: before rebuilding, reads existing `Demo 1280` frame to preserve user-edited text (first occurrence per style key wins). Delete `Demo 1280` frame first to reset to defaults.
+
+### Blog panel in `help.html`
+
+`help.html` contains a mini-blog tab ("Đánh giá & Phân tích") — a dark-sidebar panel separate from the main docs. See **`BLOG.md`** for full instructions on adding new articles.
+
+Quick reference:
+- Add nav item before `<!-- BLOG_NAV_END -->` in the sidebar
+- Add article div before `<!-- BLOG_ARTICLES_END -->` in the content area
+- Article IDs: `a01`, `a02`... (sequential); `<div id="article-aXX">` + `<a onclick="showArticle('aXX', this)">`
+- Available CSS: `.compare-table`, `.score-card.pro/.con`, `.rating-row`, `.verdict`, `.score-grid`
+- To add a new article, tell Claude: **"Thêm bài blog mới vào help.html, chủ đề: [X], nội dung: [Y]"**
 
 ## Known limitations
 

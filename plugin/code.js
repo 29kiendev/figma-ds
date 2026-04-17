@@ -278,6 +278,10 @@ function duplicateFrames(sourceFrame, col, modeMap, breakpoints) {
   var GAP = 80;
   var bpWidths = { '1280': 1280, '1440': 1440, '1920': 1920 };
   var results = [];
+  // Đảm bảo frame gốc (1280) cũng được set mode
+  if (modeMap['1280']) {
+    try { sourceFrame.setExplicitVariableModeForCollection(col, modeMap['1280']); } catch(e) {}
+  }
   var lastX = sourceFrame.x + sourceFrame.width;
 
   for (var i = 0; i < breakpoints.length; i++) {
@@ -485,8 +489,7 @@ function autoApplyStyles(frame, groupName) {
       }
       if (n.fontName.family !== TARGET_FONT) {
         skipped++;
-        var fk = n.fontName.family;
-        skipReasons[fk] = (skipReasons[fk] || 0) + 1;
+        skipReasons['font lạ'] = (skipReasons['font lạ'] || 0) + 1;
         return;
       }
 
@@ -494,7 +497,7 @@ function autoApplyStyles(frame, groupName) {
       var candidates = sizeStyleMap[mk];
       if (!candidates || candidates.length === 0) {
         skipped++;
-        var sk = 'size ' + n.fontSize + ' ' + n.fontName.style;
+        var sk = n.fontSize + 'px/' + n.fontName.style;
         skipReasons[sk] = (skipReasons[sk] || 0) + 1;
         return;
       }
@@ -554,6 +557,583 @@ function buildFrameList() {
   return list;
 }
 
+// ─── Create Typography Demo ───────────────────────────────────────────────────
+
+async function createTypographyDemo(groupName) {
+  try {
+    await Promise.all([
+      figma.loadFontAsync({ family: 'Arial', style: 'Regular' }),
+      figma.loadFontAsync({ family: 'Arial', style: 'Bold' }),
+      figma.loadFontAsync({ family: 'Courier New', style: 'Regular' }),
+    ]);
+
+    var gn = groupName;
+
+    // Build styleMap: 'Display' -> styleId, 'Body/Default' -> styleId …
+    var styleMap = {};
+    var allLS = figma.getLocalTextStyles();
+    var gnPre = gn + '/';
+    for (var si0 = 0; si0 < allLS.length; si0++) {
+      var sn0 = allLS[si0].name;
+      if (sn0.indexOf(gnPre) === 0) styleMap[sn0.slice(gnPre.length)] = allLS[si0].id;
+    }
+
+    // ── Read text templates from existing Demo 1280 frame ──────────
+    // Preserves user-edited text when re-running "Tạo trang Demo"
+    var textTpl = {};
+    (function() {
+      var pages = figma.root.children;
+      for (var pi = 0; pi < pages.length; pi++) {
+        var pg = pages[pi];
+        for (var ni = 0; ni < pg.children.length; ni++) {
+          var nd = pg.children[ni];
+          if (nd.type === 'FRAME' && nd.name === 'Demo 1280') {
+            // Walk all TEXT nodes; map style-suffix → characters (first occurrence)
+            var invStyle = {};
+            var allLS2 = figma.getLocalTextStyles();
+            var gnPre2 = gn + '/';
+            for (var si2 = 0; si2 < allLS2.length; si2++) {
+              var sn2 = allLS2[si2].name;
+              if (sn2.indexOf(gnPre2) === 0) invStyle[allLS2[si2].id] = sn2.slice(gnPre2.length);
+            }
+            function walkTpl(node) {
+              if (node.type === 'TEXT' && node.textStyleId && invStyle[node.textStyleId]) {
+                var key2 = invStyle[node.textStyleId];
+                // Keep only first occurrence per style to preserve primary heading text
+                if (!textTpl[key2]) textTpl[key2] = node.characters;
+              }
+              if (node.children) for (var ci = 0; ci < node.children.length; ci++) walkTpl(node.children[ci]);
+            }
+            walkTpl(nd);
+            return;
+          }
+        }
+      }
+    })();
+
+    // Get variable collection for mode binding (idempotent)
+    var vsR = null;
+    try { vsR = setupVariables([]); } catch(e) { vsR = null; }
+
+    // ── Color palette ───────────────────────────────────────────
+    var C = {
+      bg:       {r:.969,g:.965,b:.953}, white:    {r:1,   g:1,   b:1   },
+      s2:       {r:.953,g:.949,b:.937}, s3:       {r:.925,g:.918,b:.898},
+      border:   {r:.886,g:.878,b:.855}, borderMd: {r:.784,g:.776,b:.749},
+      t1:       {r:.102,g:.098,b:.086}, t2:       {r:.290,g:.282,b:.263},
+      t3:       {r:.478,g:.471,b:.439}, t4:       {r:.659,g:.651,b:.624},
+      accent:   {r:.176,g:.420,b:.894}, acBg:     {r:.922,g:.941,b:.992},
+      success:  {r:.110,g:.478,b:.306}, sucBg:    {r:.910,g:.961,b:.933},
+      warn:     {r:.588,g:.345,b:.039}, warnBg:   {r:.996,g:.953,b:.886},
+      danger:   {r:.851,g:.251,b:.251}, danBg:    {r:.996,g:.949,b:.949},
+      dark:     {r:.102,g:.098,b:.086},
+    };
+    var FR = {family:'Arial',       style:'Regular'};
+    var FB = {family:'Arial',       style:'Bold'};
+    var FM = {family:'Courier New', style:'Regular'};
+    function sol(c)  { return [{type:'SOLID',color:c}]; }
+    function noF()   { return []; }
+
+    // ── Core helpers ────────────────────────────────────────────
+
+    // Auto-layout frame
+    function aF(opts, parent) {
+      var f = figma.createFrame();
+      f.fills  = opts.fill  !== undefined ? opts.fill  : noF();
+      f.strokes= opts.stroke? [{type:'SOLID',color:opts.stroke}] : [];
+      if (opts.stroke) { f.strokeWeight = opts.sw||1; f.strokeAlign='INSIDE'; }
+      f.cornerRadius = opts.r || 0;
+      f.layoutMode   = opts.dir || 'VERTICAL';
+      f.primaryAxisSizingMode   = opts.hug     ? 'AUTO' : 'FIXED';
+      f.counterAxisSizingMode   = opts.hugCross? 'AUTO' : 'FIXED';
+      var W = opts.w || 100, H = opts.h || 100;
+      f.resize(W, H);
+      f.paddingTop    = opts.pt !== undefined ? opts.pt : (opts.p !== undefined ? opts.p : 0);
+      f.paddingBottom = opts.pb !== undefined ? opts.pb : (opts.p !== undefined ? opts.p : 0);
+      f.paddingLeft   = opts.pl !== undefined ? opts.pl : (opts.p !== undefined ? opts.p : 0);
+      f.paddingRight  = opts.pr !== undefined ? opts.pr : (opts.p !== undefined ? opts.p : 0);
+      f.itemSpacing   = opts.gap || 0;
+      f.clipsContent  = !!opts.clip;
+      if (opts.align) f.counterAxisAlignItems = opts.align;
+      if (opts.ja)    f.primaryAxisAlignItems  = opts.ja;
+      if (opts.la)    f.layoutAlign = opts.la;
+      if (opts.grow !== undefined) f.layoutGrow = opts.grow;
+      if (parent) parent.appendChild(f);
+      if (opts.name) f.name = opts.name;
+      return f;
+    }
+
+    // Text node
+    function aT(chars, opts, parent) {
+      var t = figma.createText();
+      t.fontName = opts.font || FR;
+      t.fontSize = opts.sz  || 13;
+      // Use saved text from previous demo run if available (preserves user edits)
+      t.characters = (opts.key && textTpl[opts.key]) ? textTpl[opts.key] : chars;
+      t.fills = sol(opts.color || C.t1);
+      t.textAutoResize = opts.fixed ? 'HEIGHT' : 'WIDTH_AND_HEIGHT';
+      if (opts.fixed) t.resize(opts.fixed, 20);
+      if (opts.lh)    t.lineHeight   = {unit:'PERCENT', value: opts.lh};
+      if (opts.ls !== undefined) t.letterSpacing = {unit:'PERCENT', value: opts.ls};
+      if (opts.upper) t.textCase = 'UPPER';
+      if (opts.la)    t.layoutAlign = opts.la;
+      if (opts.grow !== undefined) t.layoutGrow = opts.grow;
+      if (opts.key && styleMap[opts.key]) t.textStyleId = styleMap[opts.key];
+      if (parent) parent.appendChild(t);
+      return t;
+    }
+
+    // Role badge chip (blue label)
+    function badge(label, parent, bgC, txC) {
+      var f = aF({dir:'HORIZONTAL', hug:true, hugCross:true, fill:sol(bgC||C.acBg), pl:7,pr:7,pt:2,pb:2, r:3}, parent);
+      var t = figma.createText();
+      t.fontName = FR; t.fontSize = 10; t.characters = label;
+      t.fills = sol(txC||C.accent); t.textAutoResize = 'WIDTH_AND_HEIGHT';
+      f.appendChild(t);
+      return f;
+    }
+
+    // Horizontal row: text + badge
+    function row(parent) {
+      return aF({dir:'HORIZONTAL', hug:true, hugCross:true, gap:8, pt:10,pb:10}, parent);
+    }
+
+    // Section card: white box with border
+    function section(title, count, parent) {
+      var card = aF({dir:'VERTICAL', hug:true, hugCross:true, fill:sol(C.white),
+        stroke:C.border, r:14, pt:28,pb:28,pl:32,pr:32, gap:0, la:'STRETCH'}, parent);
+      card.name = title;
+      // Header row
+      var hdr = aF({dir:'HORIZONTAL', hug:true, hugCross:true, gap:8, pb:12, fill:noF()}, card);
+      var ht = figma.createText();
+      ht.fontName = FB; ht.fontSize = 10; ht.characters = title.toUpperCase();
+      ht.fills = sol(C.t3); ht.textAutoResize = 'WIDTH_AND_HEIGHT';
+      ht.letterSpacing = {unit:'PERCENT', value:10};
+      hdr.appendChild(ht);
+      var cp = aF({dir:'HORIZONTAL', hug:true, hugCross:true, fill:sol(C.s2), pl:8,pr:8,pt:1,pb:1,r:99}, hdr);
+      var ct = figma.createText();
+      ct.fontName = FR; ct.fontSize = 10; ct.characters = String(count) + ' roles';
+      ct.fills = sol(C.t3); ct.textAutoResize = 'WIDTH_AND_HEIGHT';
+      cp.appendChild(ct);
+      // divider
+      var div = figma.createRectangle();
+      div.resize(400, 1); div.fills = sol(C.border); div.layoutAlign = 'STRETCH';
+      card.appendChild(div);
+      // content wrapper
+      var body = aF({dir:'VERTICAL', hug:true, hugCross:true, gap:0, fill:noF(), la:'STRETCH'}, card);
+      return {card:card, body:body};
+    }
+
+    // ── Section builders ─────────────────────────────────────────
+
+    function buildPageLevel(parent) {
+      var s = section('Page Level', 4, parent);
+      var b = s.body;
+      var r;
+      r = row(b); aT('Tờ trình xin phê duyệt ngân sách Q2/2026',{key:'Display',font:FB,sz:22,lh:130,ls:-2.5},r); badge('Display',r);
+      r = row(b); aT('Thông tin chung',{key:'Title',font:FB,sz:18,lh:130,ls:-2},r); badge('Title',r);
+      r = row(b); aT('Danh sách đính kèm',{key:'Subtitle',font:FB,sz:16,lh:140},r); badge('Subtitle',r);
+      r = row(b); aT('Thông tin người trình',{key:'Overline',sz:10,font:FB,upper:true,ls:8,color:C.t3},r); badge('Overline',r);
+    }
+
+    function buildBody(parent) {
+      var s = section('Body & Reading', 4, parent);
+      var b = s.body;
+      var r;
+      r = row(b); aT('Tờ trình đề xuất phê duyệt khoản ngân sách bổ sung cho quý 2, nhằm đáp ứng nhu cầu mở rộng hạ tầng CNTT.',{key:'Lead',sz:14,lh:160,color:C.t2},r); badge('Lead',r);
+      r = row(b); aT('Căn cứ theo nghị quyết số 12/NQ-HĐQT ngày 01/01/2026, bộ phận CNTT đề xuất bổ sung ngân sách để triển khai hệ thống quản lý quy trình nội bộ.',{key:'Body/Default',sz:13,lh:170,color:C.t2},r); badge('Body/Default',r);
+      r = row(b); aT('Tổng kinh phí đề xuất: ₫2,450,000,000 — đã bao gồm chi phí triển khai và đào tạo.',{key:'Body/Strong',font:FB,sz:13,lh:170,color:C.t1},r); badge('Body/Strong',r);
+      r = row(b); aT('Tài liệu này chỉ mang tính tham khảo nội bộ.',{key:'Body/Secondary',sz:13,lh:170,color:C.t3},r); badge('Body/Secondary',r);
+    }
+
+    function buildForm(parent) {
+      var s = section('Form', 8, parent);
+      var b = s.body;
+      var gap = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:12,fill:noF(),pt:4}, b);
+
+      function formGrid() {
+        return aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:16,fill:noF()}, gap);
+      }
+
+      function inputField(label, value, isPlaceholder, helperText, helperType, colParent) {
+        var col = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:4,fill:noF()}, colParent);
+        var lr = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()}, col);
+        aT(label, {key: helperType==='required'?'Label/Required':'Label/Default', sz:11,font:FB,color:C.t2}, lr);
+        if (helperType==='required') { var req=figma.createText(); req.fontName=FR; req.fontSize=11; req.characters='*'; req.fills=sol(C.danger); req.textAutoResize='WIDTH_AND_HEIGHT'; lr.appendChild(req); }
+        if (helperType==='disabled') { lr.children[0].fills = sol(C.t4); }
+        var inp = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(helperType==='disabled'?C.s2:C.white),stroke:helperType==='error'?C.danger:C.borderMd,r:6,pl:12,pr:12,pt:7,pb:7,clip:true}, col);
+        aT(value, {key: isPlaceholder?'Input/Placeholder':'Input/Value', sz:13, color: isPlaceholder?C.t4:C.t1}, inp);
+        if (helperText) {
+          var hc = helperType==='error'?C.danger : helperType==='success'?C.success : C.t3;
+          var hk = helperType==='error'?'Helper/Error' : helperType==='success'?'Helper/Success' : 'Helper/Default';
+          aT(helperText, {key:hk, sz:10, color:hc}, col);
+        }
+        return col;
+      }
+
+      var g1 = formGrid();
+      inputField('Tên tờ trình','Đề xuất ngân sách Q2/2026',false,'Tên sẽ hiển thị trong danh sách tờ trình','default',g1);
+      inputField('Phòng ban *','-- Chọn phòng ban --',true,'','required',g1);
+
+      var g2 = formGrid();
+      inputField('Mã tham chiếu','REF-2026-04-0291',false,'','disabled',g2);
+      inputField('Email người trình','nguyen.van.an@email',false,'Email không đúng định dạng','error',g2);
+
+      var g3 = formGrid();
+      var taCol = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:4,fill:noF()}, g3);
+      aT('Nội dung đề xuất', {key:'Label/Default',sz:11,font:FB,color:C.t2}, taCol);
+      var ta = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:sol(C.white),stroke:C.borderMd,r:6,pl:12,pr:12,pt:7,pb:7,clip:true}, taCol);
+      aT('Đề xuất bổ sung ngân sách ₫2,450,000,000 để triển khai hệ thống quản lý quy trình nội bộ.',{key:'Input/Value',sz:13,color:C.t1},ta);
+      aT('Nội dung hợp lệ — đã lưu nháp',{key:'Helper/Success',sz:10,color:C.success},taCol);
+
+      var g4 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:32,fill:noF()}, gap);
+      var chkCol = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:6,fill:noF()}, g4);
+      function chkRow(label, checked) {
+        var cr = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, chkCol);
+        var box = aF({dir:'HORIZONTAL',hug:false,hugCross:false,fill:checked?sol(C.accent):sol(C.white),stroke:C.borderMd,r:3,w:16,h:16}, cr);
+        if (checked) { var ck=figma.createText(); ck.fontName=FB; ck.fontSize=10; ck.characters='✓'; ck.fills=sol({r:1,g:1,b:1}); ck.textAutoResize='WIDTH_AND_HEIGHT'; box.appendChild(ck); }
+        aT(label, {key:'Input/Value',sz:13,color:C.t1}, cr);
+      }
+      chkRow('Gửi thông báo qua email', true);
+      chkRow('Đính kèm tài liệu hỗ trợ', false);
+
+      var tglCol = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:8,fill:noF()}, g4);
+      function tglRow(label, on) {
+        var tr2 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:10,align:'CENTER',fill:noF()}, tglCol);
+        var track = figma.createFrame();
+        track.fills = sol(on ? C.accent : C.borderMd);
+        track.cornerRadius = 99; track.resize(36, 20);
+        tr2.appendChild(track);
+        var knob = figma.createFrame();
+        knob.fills = sol({r:1,g:1,b:1}); knob.cornerRadius = 99; knob.resize(14, 14);
+        track.appendChild(knob); knob.x = on ? 19 : 3; knob.y = 3;
+        aT(label, {key:'Input/Value',sz:13,color:C.t1}, tr2);
+      }
+      tglRow('Yêu cầu ký số', true);
+      tglRow('Cho phép uỷ quyền ký', false);
+    }
+
+    function buildTable(parent) {
+      var s = section('Table', 6, parent);
+      var b = s.body;
+      var tbl = aF({dir:'VERTICAL',hug:true,hugCross:false,gap:0,la:'STRETCH',fill:noF(),pt:4}, b);
+
+      // Label legend
+      var leg = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:12,fill:noF(),pb:8}, tbl);
+      var legItems = [['th:','Table/Header'],['td:','Table/Cell'],['bold:','Table/Cell-Bold'],['sub:','Table/Cell-Sub'],['mono:','Table/Cell-Mono'],['footer:','Table/Footer']];
+      for (var li=0; li<legItems.length; li++) {
+        var lf = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:4,fill:noF()},leg);
+        var lt = figma.createText(); lt.fontName=FR; lt.fontSize=10; lt.characters=legItems[li][0]; lt.fills=sol(C.t3); lt.textAutoResize='WIDTH_AND_HEIGHT'; lf.appendChild(lt);
+        badge(legItems[li][1], lf);
+      }
+
+      var COLS = [120, 200, 160, 120, 100, 80]; // column widths
+      function tblRow(cells, isHead, isFoot) {
+        var bg = isHead?C.s2 : isFoot?C.s2 : null;
+        var r2 = aF({dir:'HORIZONTAL',hug:false,hugCross:true,fill:bg?sol(bg):noF(),
+          stroke:C.border,sw:0,pt:8,pb:8,la:'STRETCH',clip:true}, tbl);
+        r2.strokeBottomWeight = 1;
+        for (var ci=0; ci<cells.length; ci++) {
+          var cell = cells[ci];
+          var cw = COLS[ci] || 100;
+          var cf = aF({dir:'VERTICAL',hug:false,hugCross:false,fill:noF(),pl:12,pr:4,pt:0,pb:0,w:cw,h:32}, r2);
+          if (cell.main) {
+            aT(cell.main, {key:cell.mainKey||'Table/Cell', sz:11, font:cell.bold?FB:FR, mono:cell.mono, color:C.t2, upper:cell.upper, ls:cell.ls}, cf);
+          }
+          if (cell.sub) aT(cell.sub, {key:'Table/Cell-Sub', sz:10, color:C.t3}, cf);
+          if (cell.badge2) badge(cell.badge2 === 'warn' ? 'Chờ duyệt' : cell.badge2 === 'success' ? 'Đã duyệt' : 'Từ chối', cf,
+            cell.badge2==='warn'?C.warnBg:cell.badge2==='success'?C.sucBg:C.danBg,
+            cell.badge2==='warn'?C.warn:cell.badge2==='success'?C.success:C.danger);
+        }
+        return r2;
+      }
+
+      // Header
+      tblRow([
+        {main:'Mã tờ trình',  mainKey:'Table/Header', upper:true, ls:5, bold:true},
+        {main:'Người trình',  mainKey:'Table/Header', upper:true, ls:5, bold:true},
+        {main:'Nội dung',     mainKey:'Table/Header', upper:true, ls:5, bold:true},
+        {main:'Ngày tạo',     mainKey:'Table/Header', upper:true, ls:5, bold:true},
+        {main:'Giá trị',      mainKey:'Table/Header', upper:true, ls:5, bold:true},
+        {main:'Trạng thái',   mainKey:'Table/Header', upper:true, ls:5, bold:true},
+      ], true, false);
+      // Rows
+      tblRow([{main:'TT-2026-0291',mainKey:'Table/Cell-Mono',mono:true},{main:'Nguyễn Văn An',mainKey:'Table/Cell-Bold',bold:true,sub:'Phòng CNTT'},{main:'Ngân sách Q2/2026',sub:'Hạ tầng & phần mềm'},{main:'15/04/2026',mainKey:'Table/Cell-Mono',mono:true,sub:'09:42 SA'},{main:'₫2,450,000,000',mainKey:'Table/Cell-Bold',bold:true},{badge2:'warn'}], false, false);
+      tblRow([{main:'TT-2026-0290',mainKey:'Table/Cell-Mono',mono:true},{main:'Lê Thị Bích Ngọc',mainKey:'Table/Cell-Bold',bold:true,sub:'Phòng Tài chính'},{main:'Mua sắm thiết bị',sub:'Máy in, màn hình'},{main:'14/04/2026',mainKey:'Table/Cell-Mono',mono:true,sub:'14:20 CH'},{main:'₫185,000,000',mainKey:'Table/Cell-Bold',bold:true},{badge2:'success'}], false, false);
+      // Footer
+      tblRow([{main:'Tổng 3 tờ trình — hiển thị 1–3 / 48 kết quả',mainKey:'Table/Footer'},{main:''},{main:''},{main:''},{main:'₫2,677,000,000',mainKey:'Table/Footer',bold:true},{main:''}], false, true);
+    }
+
+    function buildButton(parent) {
+      var s = section('Button', 3, parent);
+      var b = s.body;
+      var wrap = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:12,fill:noF(),pt:4}, b);
+
+      function btnEl(label, bgC, txC, key, font) {
+        var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(bgC),stroke:bgC,r:6,pl:20,pr:20,pt:8,pb:8}, null);
+        aT(label, {key:key, sz:11, font:font||FB, color:txC}, f);
+        return f;
+      }
+
+      // Large
+      var r1 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
+      r1.appendChild(btnEl('Phê duyệt',    C.success, {r:1,g:1,b:1}, 'Button/Large'));
+      r1.appendChild(btnEl('Từ chối',      C.danger,  {r:1,g:1,b:1}, 'Button/Large'));
+      r1.appendChild(btnEl('Gửi tờ trình', C.accent,  {r:1,g:1,b:1}, 'Button/Large'));
+      badge('Button/Large', r1);
+      var ht1 = figma.createText(); ht1.fontName=FR; ht1.fontSize=10; ht1.characters='→ font-size: md'; ht1.fills=sol(C.t3); ht1.textAutoResize='WIDTH_AND_HEIGHT'; r1.appendChild(ht1);
+
+      // Default
+      var r2 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
+      r2.appendChild(btnEl('Lưu nháp',          C.white,  C.t1,             'Button/Default'));
+      r2.appendChild(btnEl('Xem trước',         C.white,  C.accent,         'Button/Default'));
+      r2.appendChild(btnEl('Huỷ',               C.bg, C.t2,   'Button/Default'));
+      r2.appendChild(btnEl('Yêu cầu bổ sung',   C.white,  C.t1,             'Button/Default'));
+      badge('Button/Default', r2);
+
+      // Small
+      var r3 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
+      r3.appendChild(btnEl('Xuất PDF',      C.white, C.t1, 'Button/Small'));
+      r3.appendChild(btnEl('In tờ trình',   C.white, C.t1, 'Button/Small'));
+      r3.appendChild(btnEl('Chia sẻ',       C.white, C.t1, 'Button/Small'));
+      badge('Button/Small', r3);
+    }
+
+    function buildBadge(parent) {
+      var s = section('Badge & Tag', 3, parent);
+      var b = s.body;
+      var wrap = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:12,fill:noF(),pt:4}, b);
+
+      function bdg(label, bgC, txC) {
+        var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(bgC),r:99,pl:10,pr:10,pt:3,pb:3,gap:5}, null);
+        aT(label, {key:'Badge/Default',sz:10,font:FB,color:txC}, f);
+        return f;
+      }
+      function bdgDot(label, bgC, txC, dotC) {
+        var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(bgC),r:99,pl:10,pr:10,pt:3,pb:3,gap:5,align:'CENTER'}, null);
+        var dot = aF({hug:false,hugCross:false,fill:sol(dotC),r:99,w:6,h:6}, f);
+        aT(label, {key:'Badge/Dot',sz:10,font:FB,color:txC}, f);
+        return f;
+      }
+      function tag(label, active) {
+        var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(active?C.acBg:C.white),stroke:active?C.accent:C.borderMd,r:4,pl:10,pr:10,pt:3,pb:3}, null);
+        aT(label, {key:'Tag',sz:10,font:FB,color:active?C.accent:C.t2}, f);
+        return f;
+      }
+
+      var r1 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
+      r1.appendChild(bdg('Đã duyệt', C.sucBg,  C.success));
+      r1.appendChild(bdg('Chờ duyệt',C.warnBg, C.warn));
+      r1.appendChild(bdg('Từ chối',  C.danBg,  C.danger));
+      r1.appendChild(bdg('Đang xử lý',C.acBg,  C.accent));
+      r1.appendChild(bdg('Nháp',     C.s2,     C.t2));
+      badge('Badge/Default', r1);
+
+      var r2 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
+      r2.appendChild(bdgDot('Đã duyệt', C.sucBg, C.success, C.success));
+      r2.appendChild(bdgDot('Chờ duyệt',C.warnBg,C.warn,    C.warn));
+      r2.appendChild(bdgDot('Từ chối',  C.danBg, C.danger,  C.danger));
+      r2.appendChild(bdgDot('Đang xử lý',C.acBg, C.accent,  C.accent));
+      badge('Badge/Dot', r2);
+
+      var r3 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
+      r3.appendChild(tag('Tất cả', true));
+      r3.appendChild(tag('Chờ tôi duyệt', false));
+      r3.appendChild(tag('Tôi đã tạo', false));
+      r3.appendChild(tag('Đã hoàn tất', false));
+      r3.appendChild(tag('Khẩn cấp', false));
+      badge('Tag', r3);
+    }
+
+    function buildNav(parent) {
+      var s = section('Navigation', 5, parent);
+      var b = s.body;
+      var grid = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:24,fill:noF(),pt:4}, b);
+
+      // Sidebar mock
+      var navCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:8}, grid);
+      var lbl1 = figma.createText(); lbl1.fontName=FR; lbl1.fontSize=10; lbl1.characters='Sidebar nav'; lbl1.fills=sol(C.t3); lbl1.textAutoResize='WIDTH_AND_HEIGHT'; navCol.appendChild(lbl1);
+      var nav = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:sol(C.s2),r:6,pl:16,pr:16,pt:12,pb:12,gap:2}, navCol);
+
+      function navSection(label) {
+        var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF(),pt:8,pb:4}, nav);
+        aT(label, {key:'Nav/Section',sz:10,font:FB,upper:true,ls:8,color:C.t3}, f);
+        badge('Nav/Section', f);
+      }
+      function navItem(label, active) {
+        var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:active?sol(C.acBg):noF(),r:4,pl:8,pr:8,pt:5,pb:5,gap:6}, nav);
+        aT(label, {key:active?'Nav/Item-Active':'Nav/Item',sz:11,font:active?FB:FR,color:active?C.accent:C.t2}, f);
+        if (active) badge('Nav/Item-Active', f);
+        else badge('Nav/Item', f);
+      }
+      navSection('Tờ trình');
+      navItem('Danh sách tờ trình', true);
+      navItem('Tạo tờ trình mới', false);
+      navItem('Chờ tôi phê duyệt', false);
+      navSection('Hệ thống');
+      navItem('Cài đặt', false);
+
+      // Breadcrumb
+      var bcCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:8}, grid);
+      var lbl2 = figma.createText(); lbl2.fontName=FR; lbl2.fontSize=10; lbl2.characters='Breadcrumb'; lbl2.fills=sol(C.t3); lbl2.textAutoResize='WIDTH_AND_HEIGHT'; bcCol.appendChild(lbl2);
+      var bc = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:4,fill:noF()}, bcCol);
+      function bcLink(label) { aT(label, {key:'Breadcrumb',sz:11,color:C.accent}, bc); }
+      function bcSep()  { var t=figma.createText(); t.fontName=FR; t.fontSize=11; t.characters='/'; t.fills=sol(C.t4); t.textAutoResize='WIDTH_AND_HEIGHT'; bc.appendChild(t); }
+      function bcCur(label) { aT(label, {key:'Breadcrumb/Current',sz:11,font:FB,color:C.t1}, bc); }
+      bcLink('Trang chủ'); bcSep(); bcLink('Tờ trình'); bcSep(); bcLink('Phê duyệt ngân sách'); bcSep(); bcCur('TT-2026-0291');
+      badge('Breadcrumb · Breadcrumb/Current', bcCol);
+    }
+
+    function buildNotif(parent) {
+      var s = section('Notification & Feedback', 5, parent);
+      var b = s.body;
+      var grid = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:24,fill:noF(),pt:4}, b);
+
+      // Notification list
+      var nCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:0}, grid);
+      function notifItem(dotC, title, body2, time2) {
+        var ni = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:10,fill:noF(),pt:10,pb:10}, nCol);
+        var dot = aF({hug:false,hugCross:false,fill:sol(dotC),r:99,w:8,h:8,pt:4}, ni);
+        var nd = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:2}, ni);
+        aT(title,  {key:'Notif/Title', sz:11,font:FB,color:C.t1}, nd);
+        aT(body2,  {key:'Notif/Body',  sz:11,color:C.t2,lh:150},  nd);
+        aT(time2,  {key:'Notif/Time',  sz:10,color:C.t4},          nd);
+      }
+      notifItem(C.accent,  'TT-2026-0291 vừa được phê duyệt',     'Giám đốc Phạm Minh Châu đã ký duyệt tờ trình ngân sách Q2.',  '5 phút trước · 09:42 15/04/2026');
+      notifItem(C.warn,    'Tờ trình yêu cầu bổ sung hồ sơ',      'TT-2026-0288 cần đính kèm báo cáo tài chính Q1.',             '2 giờ trước');
+
+      // Toast + Tooltip
+      var rCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:12}, grid);
+
+      var tlbl = figma.createText(); tlbl.fontName=FR; tlbl.fontSize=10; tlbl.characters='Toast'; tlbl.fills=sol(C.t3); tlbl.textAutoResize='WIDTH_AND_HEIGHT'; rCol.appendChild(tlbl);
+      var toast = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(C.dark),r:6,pl:16,pr:16,pt:10,pb:10,gap:10}, rCol);
+      aT('Tờ trình đã được gửi thành công', {key:'Toast/Message',sz:11,color:{r:1,g:1,b:1}}, toast);
+
+      var ttlbl = figma.createText(); ttlbl.fontName=FR; ttlbl.fontSize=10; ttlbl.characters='Tooltip'; ttlbl.fills=sol(C.t3); ttlbl.textAutoResize='WIDTH_AND_HEIGHT'; rCol.appendChild(ttlbl);
+      var tip = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(C.dark),r:4,pl:10,pr:10,pt:5,pb:5}, rCol);
+      aT('Nhấn để xem lịch sử phê duyệt', {key:'Tooltip',sz:10,color:{r:1,g:1,b:1}}, tip);
+    }
+
+    function buildApproval(parent) {
+      var s = section('Đặc thù tờ trình phê duyệt', 8, parent);
+      var b = s.body;
+      var grid = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:24,fill:noF(),pt:4}, b);
+
+      // Approval cards
+      var acCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:10}, grid);
+      var ac1lbl = figma.createText(); ac1lbl.fontName=FR; ac1lbl.fontSize=10; ac1lbl.characters='Approval signers'; ac1lbl.fills=sol(C.t3); ac1lbl.textAutoResize='WIDTH_AND_HEIGHT'; acCol.appendChild(ac1lbl);
+
+      function approvalCard(initials, avatarBg, avatarTx, name, role, status, statusC, comment, date) {
+        var card2 = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:sol(C.s2),stroke:C.border,r:10,pl:16,pr:16,pt:16,pb:16,gap:0,la:'STRETCH'}, acCol);
+        var row2 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:noF(),gap:12}, card2);
+        // Avatar
+        var av = aF({hug:false,hugCross:false,fill:sol(avatarBg),r:99,w:36,h:36,ja:'CENTER',align:'CENTER'}, row2);
+        var avT = figma.createText(); avT.fontName=FB; avT.fontSize=12; avT.characters=initials; avT.fills=sol(avatarTx); avT.textAutoResize='WIDTH_AND_HEIGHT'; avT.layoutAlign='CENTER'; av.appendChild(avT);
+        // Info
+        var info = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:2}, row2);
+        var nr = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()},info);
+        aT(name,   {key:'Approval/Name',   sz:13,font:FB,color:C.t1}, nr); badge('Approval/Name', nr);
+        aT(role,   {key:'Approval/Role',   sz:11,color:C.t3}, info);
+        var str = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()},info);
+        aT(status, {key:'Approval/Status', sz:11,font:FB,color:statusC}, str); badge('Approval/Status', str);
+        aT(comment,{key:'Approval/Comment',sz:13,color:C.t2,lh:170}, info);
+        var dr = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()},info);
+        aT(date,   {key:'Approval/Date',   sz:10,font:FM,color:C.t4}, dr); badge('Approval/Date', dr);
+        return card2;
+      }
+      approvalCard('PC', C.acBg, C.accent, 'Phạm Minh Châu','Giám đốc điều hành','✓ Đã phê duyệt',C.success,'Đồng ý với đề xuất. Yêu cầu báo cáo tiến độ hàng tháng.','15/04/2026 · 09:42 SA');
+      approvalCard('TL', C.danBg, C.danger, 'Trần Văn Lâm','Trưởng phòng Tài chính','✕ Từ chối',C.danger,'Ngân sách vượt quá hạn mức. Đề nghị điều chỉnh xuống ≤₫2,000,000,000.','14/04/2026 · 16:30 CH');
+
+      // Timeline + Code ref
+      var tlCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:8}, grid);
+      var tllbl = figma.createText(); tllbl.fontName=FR; tllbl.fontSize=10; tllbl.characters='Quy trình xử lý (Timeline)'; tllbl.fills=sol(C.t3); tllbl.textAutoResize='WIDTH_AND_HEIGHT'; tlCol.appendChild(tllbl);
+      var tlWrap = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:0}, tlCol);
+
+      function tlItem(stepLabel, descLabel, dotFill, textC) {
+        var ti = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:noF(),gap:10,pt:0,pb:16}, tlWrap);
+        var dot2 = aF({hug:false,hugCross:false,fill:sol(dotFill),stroke:dotFill,r:99,w:16,h:16}, ti);
+        var tc = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:2}, ti);
+        var sr = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()},tc);
+        aT(stepLabel, {key:'Timeline/Step',sz:11,font:FB,color:textC||C.t1}, sr); badge('Timeline/Step', sr);
+        var dr2 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()},tc);
+        aT(descLabel, {key:'Timeline/Desc',sz:10,color:C.t3}, dr2); badge('Timeline/Desc', dr2);
+      }
+      tlItem('Tạo tờ trình',        'Nguyễn Văn An · 12/04/2026', C.success, C.t1);
+      tlItem('Trưởng phòng xét duyệt','Lê Thị Ngọc · 13/04/2026', C.success, C.t1);
+      tlItem('Giám đốc phê duyệt',  'Đang chờ · Hạn 20/04/2026',  C.white,   C.accent);
+      tlItem('Hoàn tất & lưu trữ',  'Chưa bắt đầu',               C.white,   C.t3);
+
+      // Code ref
+      var crlbl = figma.createText(); crlbl.fontName=FR; crlbl.fontSize=10; crlbl.characters='Code/Reference'; crlbl.fills=sol(C.t3); crlbl.textAutoResize='WIDTH_AND_HEIGHT'; tlCol.appendChild(crlbl);
+      var crRow = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, tlCol);
+      function codeRef(label) {
+        var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(C.s2),stroke:C.border,r:4,pl:6,pr:6,pt:1,pb:1}, crRow);
+        aT(label, {key:'Code/Reference',sz:10,font:FM,color:C.t2}, f);
+        return f;
+      }
+      codeRef('TT-2026-0291'); codeRef('REF-CNTT-Q2-001'); codeRef('NQ-12/2026');
+      badge('Code/Reference', crRow);
+    }
+
+    // ── Build 3 BP frames ────────────────────────────────────────
+    var page = figma.currentPage;
+    // Remove old demo frames
+    for (var di = page.children.length-1; di >= 0; di--) {
+      var dc = page.children[di];
+      if (dc.name === 'Demo 1280' || dc.name === 'Demo 1440' || dc.name === 'Demo 1920') dc.remove();
+    }
+
+    var BPS = ['1280','1440','1920'];
+    var bpFrames = [];
+    var startX = 100, startY = 100, gapX = 120;
+    var curX = startX;
+
+    for (var bpi = 0; bpi < BPS.length; bpi++) {
+      var bp = BPS[bpi];
+      var bpW = parseInt(bp);
+
+      var bpF = aF({
+        name: 'Demo ' + bp,
+        dir: 'VERTICAL', hug: true, hugCross: false,
+        fill: sol(C.bg),
+        w: bpW, h: 100,
+        pt: 48, pb: 64, pl: 40, pr: 40, gap: 16,
+      }, null);
+
+      // Page title
+      var titleWrap = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:4}, bpF);
+      var titleTag = figma.createText(); titleTag.fontName=FR; titleTag.fontSize=10; titleTag.characters='Design System'; titleTag.fills=sol(C.accent); titleTag.textAutoResize='WIDTH_AND_HEIGHT'; titleTag.letterSpacing={unit:'PERCENT',value:10}; titleWrap.appendChild(titleTag);
+      var titleH = figma.createText(); titleH.fontName=FB; titleH.fontSize=28; titleH.characters='Typography Roles'; titleH.fills=sol(C.t1); titleH.textAutoResize='WIDTH_AND_HEIGHT'; titleWrap.appendChild(titleH);
+      var titleS = figma.createText(); titleS.fontName=FR; titleS.fontSize=14; titleS.characters='46 roles · 7 token sizes · Breakpoint ' + bp + 'px'; titleS.fills=sol(C.t3); titleS.textAutoResize='WIDTH_AND_HEIGHT'; titleWrap.appendChild(titleS);
+
+      buildPageLevel(bpF);
+      buildBody(bpF);
+      buildForm(bpF);
+      buildTable(bpF);
+      buildButton(bpF);
+      buildBadge(bpF);
+      buildNav(bpF);
+      buildNotif(bpF);
+      buildApproval(bpF);
+
+      page.appendChild(bpF);
+      bpF.x = curX; bpF.y = startY;
+      curX += bpW + gapX;
+
+      if (vsR && vsR.col && vsR.modeMap && vsR.modeMap[bp]) {
+        try { bpF.setExplicitVariableModeForCollection(vsR.col, vsR.modeMap[bp]); } catch(e) {}
+      }
+
+      bpFrames.push(bpF);
+    }
+
+    figma.viewport.scrollAndZoomIntoView(bpFrames);
+    figma.ui.postMessage({ type: 'demoCreated', text: '3 frames (1280 / 1440 / 1920) · ' + Object.keys(styleMap).length + ' text styles bound' });
+  } catch(e2) {
+    figma.ui.postMessage({ type: 'demoError', text: 'Lỗi: ' + e2.message });
+  }
+}
+
 figma.showUI(__html__, { width: 320, height: 560 });
 
 var currentTokenData = loadTokenData();
@@ -600,544 +1180,7 @@ figma.ui.onmessage = async function(msg) {
 
   // ── Create Demo Page ──────────────────────────────────────────────
   if (msg.type === 'create-demo-page') {
-    try {
-      await Promise.all([
-        figma.loadFontAsync({ family: 'Arial', style: 'Regular' }),
-        figma.loadFontAsync({ family: 'Arial', style: 'Bold' }),
-        figma.loadFontAsync({ family: 'Courier New', style: 'Regular' }),
-      ]);
-
-      var gn = msg.groupName || 'FAN Font';
-
-      // Build styleMap: 'Display' -> styleId, 'Body/Default' -> styleId …
-      var styleMap = {};
-      var allLS = figma.getLocalTextStyles();
-      var gnPre = gn + '/';
-      for (var si0 = 0; si0 < allLS.length; si0++) {
-        var sn0 = allLS[si0].name;
-        if (sn0.indexOf(gnPre) === 0) styleMap[sn0.slice(gnPre.length)] = allLS[si0].id;
-      }
-
-      // Get variable collection for mode binding (idempotent)
-      var vsR = null;
-      try { vsR = setupVariables([]); } catch(e) { vsR = null; }
-
-      // ── Color palette ───────────────────────────────────────────
-      var C = {
-        bg:       {r:.969,g:.965,b:.953}, white:    {r:1,   g:1,   b:1   },
-        s2:       {r:.953,g:.949,b:.937}, s3:       {r:.925,g:.918,b:.898},
-        border:   {r:.886,g:.878,b:.855}, borderMd: {r:.784,g:.776,b:.749},
-        t1:       {r:.102,g:.098,b:.086}, t2:       {r:.290,g:.282,b:.263},
-        t3:       {r:.478,g:.471,b:.439}, t4:       {r:.659,g:.651,b:.624},
-        accent:   {r:.176,g:.420,b:.894}, acBg:     {r:.922,g:.941,b:.992},
-        success:  {r:.110,g:.478,b:.306}, sucBg:    {r:.910,g:.961,b:.933},
-        warn:     {r:.588,g:.345,b:.039}, warnBg:   {r:.996,g:.953,b:.886},
-        danger:   {r:.851,g:.251,b:.251}, danBg:    {r:.996,g:.949,b:.949},
-        dark:     {r:.102,g:.098,b:.086},
-      };
-      var FR = {family:'Arial',       style:'Regular'};
-      var FB = {family:'Arial',       style:'Bold'};
-      var FM = {family:'Courier New', style:'Regular'};
-      function sol(c)  { return [{type:'SOLID',color:c}]; }
-      function noF()   { return []; }
-
-      // ── Core helpers ────────────────────────────────────────────
-
-      // Auto-layout frame
-      function aF(opts, parent) {
-        var f = figma.createFrame();
-        f.fills  = opts.fill  !== undefined ? opts.fill  : noF();
-        f.strokes= opts.stroke? [{type:'SOLID',color:opts.stroke}] : [];
-        if (opts.stroke) { f.strokeWeight = opts.sw||1; f.strokeAlign='INSIDE'; }
-        f.cornerRadius = opts.r || 0;
-        f.layoutMode   = opts.dir || 'VERTICAL';
-        f.primaryAxisSizingMode   = opts.hug     ? 'AUTO' : 'FIXED';
-        f.counterAxisSizingMode   = opts.hugCross? 'AUTO' : 'FIXED';
-        var W = opts.w || 100, H = opts.h || 100;
-        f.resize(W, H);
-        f.paddingTop    = opts.pt !== undefined ? opts.pt : (opts.p !== undefined ? opts.p : 0);
-        f.paddingBottom = opts.pb !== undefined ? opts.pb : (opts.p !== undefined ? opts.p : 0);
-        f.paddingLeft   = opts.pl !== undefined ? opts.pl : (opts.p !== undefined ? opts.p : 0);
-        f.paddingRight  = opts.pr !== undefined ? opts.pr : (opts.p !== undefined ? opts.p : 0);
-        f.itemSpacing   = opts.gap || 0;
-        f.clipsContent  = !!opts.clip;
-        if (opts.align) f.counterAxisAlignItems = opts.align;
-        if (opts.ja)    f.primaryAxisAlignItems  = opts.ja;
-        if (opts.la)    f.layoutAlign = opts.la;
-        if (opts.grow !== undefined) f.layoutGrow = opts.grow;
-        if (parent) parent.appendChild(f);
-        if (opts.name) f.name = opts.name;
-        return f;
-      }
-
-      // Text node
-      function aT(chars, opts, parent) {
-        var t = figma.createText();
-        t.fontName = opts.font || FR;
-        t.fontSize = opts.sz  || 13;
-        t.characters = chars;
-        t.fills = sol(opts.color || C.t1);
-        t.textAutoResize = opts.fixed ? 'HEIGHT' : 'WIDTH_AND_HEIGHT';
-        if (opts.fixed) t.resize(opts.fixed, 20);
-        if (opts.lh)    t.lineHeight   = {unit:'PERCENT', value: opts.lh};
-        if (opts.ls !== undefined) t.letterSpacing = {unit:'PERCENT', value: opts.ls};
-        if (opts.upper) t.textCase = 'UPPER';
-        if (opts.la)    t.layoutAlign = opts.la;
-        if (opts.grow !== undefined) t.layoutGrow = opts.grow;
-        if (opts.key && styleMap[opts.key]) t.textStyleId = styleMap[opts.key];
-        if (parent) parent.appendChild(t);
-        return t;
-      }
-
-      // Role badge chip (blue label)
-      function badge(label, parent, bgC, txC) {
-        var f = aF({dir:'HORIZONTAL', hug:true, hugCross:true, fill:sol(bgC||C.acBg), pl:7,pr:7,pt:2,pb:2, r:3}, parent);
-        var t = figma.createText();
-        t.fontName = FR; t.fontSize = 10; t.characters = label;
-        t.fills = sol(txC||C.accent); t.textAutoResize = 'WIDTH_AND_HEIGHT';
-        f.appendChild(t);
-        return f;
-      }
-
-      // Horizontal row: text + badge
-      function row(parent) {
-        return aF({dir:'HORIZONTAL', hug:true, hugCross:true, gap:8, pt:10,pb:10}, parent);
-      }
-
-      // Section card: white box with border
-      function section(title, count, parent) {
-        var card = aF({dir:'VERTICAL', hug:true, hugCross:true, fill:sol(C.white),
-          stroke:C.border, r:14, pt:28,pb:28,pl:32,pr:32, gap:0, la:'STRETCH'}, parent);
-        card.name = title;
-        // Header row
-        var hdr = aF({dir:'HORIZONTAL', hug:true, hugCross:true, gap:8, pb:12, fill:noF()}, card);
-        var ht = figma.createText();
-        ht.fontName = FB; ht.fontSize = 10; ht.characters = title.toUpperCase();
-        ht.fills = sol(C.t3); ht.textAutoResize = 'WIDTH_AND_HEIGHT';
-        ht.letterSpacing = {unit:'PERCENT', value:10};
-        hdr.appendChild(ht);
-        var cp = aF({dir:'HORIZONTAL', hug:true, hugCross:true, fill:sol(C.s2), pl:8,pr:8,pt:1,pb:1,r:99}, hdr);
-        var ct = figma.createText();
-        ct.fontName = FR; ct.fontSize = 10; ct.characters = String(count) + ' roles';
-        ct.fills = sol(C.t3); ct.textAutoResize = 'WIDTH_AND_HEIGHT';
-        cp.appendChild(ct);
-        // divider
-        var div = figma.createRectangle();
-        div.resize(400, 1); div.fills = sol(C.border); div.layoutAlign = 'STRETCH';
-        card.appendChild(div);
-        // content wrapper
-        var body = aF({dir:'VERTICAL', hug:true, hugCross:true, gap:0, fill:noF(), la:'STRETCH'}, card);
-        return {card:card, body:body};
-      }
-
-      // ── Section builders ─────────────────────────────────────────
-
-      function buildPageLevel(parent) {
-        var s = section('Page Level', 4, parent);
-        var b = s.body;
-        var r;
-        r = row(b); aT('Tờ trình xin phê duyệt ngân sách Q2/2026',{key:'Display',font:FB,sz:22,lh:130,ls:-2.5},r); badge('Display',r);
-        r = row(b); aT('Thông tin chung',{key:'Title',font:FB,sz:18,lh:130,ls:-2},r); badge('Title',r);
-        r = row(b); aT('Danh sách đính kèm',{key:'Subtitle',font:FB,sz:16,lh:140},r); badge('Subtitle',r);
-        r = row(b); aT('Thông tin người trình',{key:'Overline',sz:10,font:FB,upper:true,ls:8,color:C.t3},r); badge('Overline',r);
-      }
-
-      function buildBody(parent) {
-        var s = section('Body & Reading', 4, parent);
-        var b = s.body;
-        var r;
-        r = row(b); aT('Tờ trình đề xuất phê duyệt khoản ngân sách bổ sung cho quý 2, nhằm đáp ứng nhu cầu mở rộng hạ tầng CNTT.',{key:'Lead',sz:14,lh:160,color:C.t2},r); badge('Lead',r);
-        r = row(b); aT('Căn cứ theo nghị quyết số 12/NQ-HĐQT ngày 01/01/2026, bộ phận CNTT đề xuất bổ sung ngân sách để triển khai hệ thống quản lý quy trình nội bộ.',{key:'Body/Default',sz:13,lh:170,color:C.t2},r); badge('Body/Default',r);
-        r = row(b); aT('Tổng kinh phí đề xuất: ₫2,450,000,000 — đã bao gồm chi phí triển khai và đào tạo.',{key:'Body/Strong',font:FB,sz:13,lh:170,color:C.t1},r); badge('Body/Strong',r);
-        r = row(b); aT('Tài liệu này chỉ mang tính tham khảo nội bộ.',{key:'Body/Secondary',sz:13,lh:170,color:C.t3},r); badge('Body/Secondary',r);
-      }
-
-      function buildForm(parent) {
-        var s = section('Form', 8, parent);
-        var b = s.body;
-        var gap = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:12,fill:noF(),pt:4}, b);
-
-        function formGrid() {
-          return aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:16,fill:noF()}, gap);
-        }
-
-        function inputField(label, value, isPlaceholder, helperText, helperType, colParent) {
-          var col = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:4,fill:noF()}, colParent);
-          var lr = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()}, col);
-          aT(label, {key: helperType==='required'?'Label/Required':'Label/Default', sz:11,font:FB,color:C.t2}, lr);
-          if (helperType==='required') { var req=figma.createText(); req.fontName=FR; req.fontSize=11; req.characters='*'; req.fills=sol(C.danger); req.textAutoResize='WIDTH_AND_HEIGHT'; lr.appendChild(req); }
-          if (helperType==='disabled') { lr.children[0].fills = sol(C.t4); }
-          var inp = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(helperType==='disabled'?C.s2:C.white),stroke:helperType==='error'?C.danger:C.borderMd,r:6,pl:12,pr:12,pt:7,pb:7,clip:true}, col);
-          aT(value, {key: isPlaceholder?'Input/Placeholder':'Input/Value', sz:13, color: isPlaceholder?C.t4:C.t1}, inp);
-          if (helperText) {
-            var hc = helperType==='error'?C.danger : helperType==='success'?C.success : C.t3;
-            var hk = helperType==='error'?'Helper/Error' : helperType==='success'?'Helper/Success' : 'Helper/Default';
-            aT(helperText, {key:hk, sz:10, color:hc}, col);
-          }
-          return col;
-        }
-
-        var g1 = formGrid();
-        inputField('Tên tờ trình','Đề xuất ngân sách Q2/2026',false,'Tên sẽ hiển thị trong danh sách tờ trình','default',g1);
-        inputField('Phòng ban *','-- Chọn phòng ban --',true,'','required',g1);
-
-        var g2 = formGrid();
-        inputField('Mã tham chiếu','REF-2026-04-0291',false,'','disabled',g2);
-        inputField('Email người trình','nguyen.van.an@email',false,'Email không đúng định dạng','error',g2);
-
-        var g3 = formGrid();
-        var taCol = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:4,fill:noF()}, g3);
-        aT('Nội dung đề xuất', {key:'Label/Default',sz:11,font:FB,color:C.t2}, taCol);
-        var ta = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:sol(C.white),stroke:C.borderMd,r:6,pl:12,pr:12,pt:7,pb:7,clip:true}, taCol);
-        aT('Đề xuất bổ sung ngân sách ₫2,450,000,000 để triển khai hệ thống quản lý quy trình nội bộ.',{key:'Input/Value',sz:13,color:C.t1},ta);
-        aT('Nội dung hợp lệ — đã lưu nháp',{key:'Helper/Success',sz:10,color:C.success},taCol);
-
-        var g4 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:32,fill:noF()}, gap);
-        var chkCol = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:6,fill:noF()}, g4);
-        function chkRow(label, checked) {
-          var cr = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, chkCol);
-          var box = aF({dir:'HORIZONTAL',hug:false,hugCross:false,fill:checked?sol(C.accent):sol(C.white),stroke:C.borderMd,r:3,w:16,h:16}, cr);
-          if (checked) { var ck=figma.createText(); ck.fontName=FB; ck.fontSize=10; ck.characters='✓'; ck.fills=sol({r:1,g:1,b:1}); ck.textAutoResize='WIDTH_AND_HEIGHT'; box.appendChild(ck); }
-          aT(label, {key:'Input/Value',sz:13,color:C.t1}, cr);
-        }
-        chkRow('Gửi thông báo qua email', true);
-        chkRow('Đính kèm tài liệu hỗ trợ', false);
-
-        var tglCol = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:8,fill:noF()}, g4);
-        function tglRow(label, on) {
-          var tr2 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:10,align:'CENTER',fill:noF()}, tglCol);
-          var track = figma.createFrame();
-          track.fills = sol(on ? C.accent : C.borderMd);
-          track.cornerRadius = 99; track.resize(36, 20);
-          tr2.appendChild(track);
-          var knob = figma.createFrame();
-          knob.fills = sol({r:1,g:1,b:1}); knob.cornerRadius = 99; knob.resize(14, 14);
-          track.appendChild(knob); knob.x = on ? 19 : 3; knob.y = 3;
-          aT(label, {key:'Input/Value',sz:13,color:C.t1}, tr2);
-        }
-        tglRow('Yêu cầu ký số', true);
-        tglRow('Cho phép uỷ quyền ký', false);
-      }
-
-      function buildTable(parent) {
-        var s = section('Table', 6, parent);
-        var b = s.body;
-        var tbl = aF({dir:'VERTICAL',hug:true,hugCross:false,gap:0,la:'STRETCH',fill:noF(),pt:4}, b);
-
-        // Label legend
-        var leg = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:12,fill:noF(),pb:8}, tbl);
-        var legItems = [['th:','Table/Header'],['td:','Table/Cell'],['bold:','Table/Cell-Bold'],['sub:','Table/Cell-Sub'],['mono:','Table/Cell-Mono'],['footer:','Table/Footer']];
-        for (var li=0; li<legItems.length; li++) {
-          var lf = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:4,fill:noF()},leg);
-          var lt = figma.createText(); lt.fontName=FR; lt.fontSize=10; lt.characters=legItems[li][0]; lt.fills=sol(C.t3); lt.textAutoResize='WIDTH_AND_HEIGHT'; lf.appendChild(lt);
-          badge(legItems[li][1], lf);
-        }
-
-        var COLS = [120, 200, 160, 120, 100, 80]; // column widths
-        function tblRow(cells, isHead, isFoot) {
-          var bg = isHead?C.s2 : isFoot?C.s2 : null;
-          var r2 = aF({dir:'HORIZONTAL',hug:false,hugCross:true,fill:bg?sol(bg):noF(),
-            stroke:C.border,sw:0,pt:8,pb:8,la:'STRETCH',clip:true}, tbl);
-          r2.strokeBottomWeight = 1;
-          for (var ci=0; ci<cells.length; ci++) {
-            var cell = cells[ci];
-            var cw = COLS[ci] || 100;
-            var cf = aF({dir:'VERTICAL',hug:false,hugCross:false,fill:noF(),pl:12,pr:4,pt:0,pb:0,w:cw,h:32}, r2);
-            if (cell.main) {
-              aT(cell.main, {key:cell.mainKey||'Table/Cell', sz:11, font:cell.bold?FB:FR, mono:cell.mono, color:C.t2, upper:cell.upper, ls:cell.ls}, cf);
-            }
-            if (cell.sub) aT(cell.sub, {key:'Table/Cell-Sub', sz:10, color:C.t3}, cf);
-            if (cell.badge2) badge(cell.badge2 === 'warn' ? 'Chờ duyệt' : cell.badge2 === 'success' ? 'Đã duyệt' : 'Từ chối', cf,
-              cell.badge2==='warn'?C.warnBg:cell.badge2==='success'?C.sucBg:C.danBg,
-              cell.badge2==='warn'?C.warn:cell.badge2==='success'?C.success:C.danger);
-          }
-          return r2;
-        }
-
-        // Header
-        tblRow([
-          {main:'Mã tờ trình',  mainKey:'Table/Header', upper:true, ls:5, bold:true},
-          {main:'Người trình',  mainKey:'Table/Header', upper:true, ls:5, bold:true},
-          {main:'Nội dung',     mainKey:'Table/Header', upper:true, ls:5, bold:true},
-          {main:'Ngày tạo',     mainKey:'Table/Header', upper:true, ls:5, bold:true},
-          {main:'Giá trị',      mainKey:'Table/Header', upper:true, ls:5, bold:true},
-          {main:'Trạng thái',   mainKey:'Table/Header', upper:true, ls:5, bold:true},
-        ], true, false);
-        // Rows
-        tblRow([{main:'TT-2026-0291',mainKey:'Table/Cell-Mono',mono:true},{main:'Nguyễn Văn An',mainKey:'Table/Cell-Bold',bold:true,sub:'Phòng CNTT'},{main:'Ngân sách Q2/2026',sub:'Hạ tầng & phần mềm'},{main:'15/04/2026',mainKey:'Table/Cell-Mono',mono:true,sub:'09:42 SA'},{main:'₫2,450,000,000',mainKey:'Table/Cell-Bold',bold:true},{badge2:'warn'}], false, false);
-        tblRow([{main:'TT-2026-0290',mainKey:'Table/Cell-Mono',mono:true},{main:'Lê Thị Bích Ngọc',mainKey:'Table/Cell-Bold',bold:true,sub:'Phòng Tài chính'},{main:'Mua sắm thiết bị',sub:'Máy in, màn hình'},{main:'14/04/2026',mainKey:'Table/Cell-Mono',mono:true,sub:'14:20 CH'},{main:'₫185,000,000',mainKey:'Table/Cell-Bold',bold:true},{badge2:'success'}], false, false);
-        // Footer
-        tblRow([{main:'Tổng 3 tờ trình — hiển thị 1–3 / 48 kết quả',mainKey:'Table/Footer'},{main:''},{main:''},{main:''},{main:'₫2,677,000,000',mainKey:'Table/Footer',bold:true},{main:''}], false, true);
-      }
-
-      function buildButton(parent) {
-        var s = section('Button', 3, parent);
-        var b = s.body;
-        var wrap = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:12,fill:noF(),pt:4}, b);
-
-        function btnEl(label, bgC, txC, key, font) {
-          var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(bgC),stroke:bgC,r:6,pl:20,pr:20,pt:8,pb:8}, null);
-          aT(label, {key:key, sz:11, font:font||FB, color:txC}, f);
-          return f;
-        }
-
-        // Large
-        var r1 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
-        r1.appendChild(btnEl('Phê duyệt',    C.success, {r:1,g:1,b:1}, 'Button/Large'));
-        r1.appendChild(btnEl('Từ chối',      C.danger,  {r:1,g:1,b:1}, 'Button/Large'));
-        r1.appendChild(btnEl('Gửi tờ trình', C.accent,  {r:1,g:1,b:1}, 'Button/Large'));
-        badge('Button/Large', r1);
-        var ht1 = figma.createText(); ht1.fontName=FR; ht1.fontSize=10; ht1.characters='→ font-size: md'; ht1.fills=sol(C.t3); ht1.textAutoResize='WIDTH_AND_HEIGHT'; r1.appendChild(ht1);
-
-        // Default
-        var r2 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
-        r2.appendChild(btnEl('Lưu nháp',          C.white,  C.t1,             'Button/Default'));
-        r2.appendChild(btnEl('Xem trước',         C.white,  C.accent,         'Button/Default'));
-        r2.appendChild(btnEl('Huỷ',               C.bg, C.t2,   'Button/Default'));
-        r2.appendChild(btnEl('Yêu cầu bổ sung',   C.white,  C.t1,             'Button/Default'));
-        badge('Button/Default', r2);
-
-        // Small
-        var r3 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
-        r3.appendChild(btnEl('Xuất PDF',      C.white, C.t1, 'Button/Small'));
-        r3.appendChild(btnEl('In tờ trình',   C.white, C.t1, 'Button/Small'));
-        r3.appendChild(btnEl('Chia sẻ',       C.white, C.t1, 'Button/Small'));
-        badge('Button/Small', r3);
-      }
-
-      function buildBadge(parent) {
-        var s = section('Badge & Tag', 3, parent);
-        var b = s.body;
-        var wrap = aF({dir:'VERTICAL',hug:true,hugCross:true,gap:12,fill:noF(),pt:4}, b);
-
-        function bdg(label, bgC, txC) {
-          var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(bgC),r:99,pl:10,pr:10,pt:3,pb:3,gap:5}, null);
-          aT(label, {key:'Badge/Default',sz:10,font:FB,color:txC}, f);
-          return f;
-        }
-        function bdgDot(label, bgC, txC, dotC) {
-          var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(bgC),r:99,pl:10,pr:10,pt:3,pb:3,gap:5,align:'CENTER'}, null);
-          var dot = aF({hug:false,hugCross:false,fill:sol(dotC),r:99,w:6,h:6}, f);
-          aT(label, {key:'Badge/Dot',sz:10,font:FB,color:txC}, f);
-          return f;
-        }
-        function tag(label, active) {
-          var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(active?C.acBg:C.white),stroke:active?C.accent:C.borderMd,r:4,pl:10,pr:10,pt:3,pb:3}, null);
-          aT(label, {key:'Tag',sz:10,font:FB,color:active?C.accent:C.t2}, f);
-          return f;
-        }
-
-        var r1 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
-        r1.appendChild(bdg('Đã duyệt', C.sucBg,  C.success));
-        r1.appendChild(bdg('Chờ duyệt',C.warnBg, C.warn));
-        r1.appendChild(bdg('Từ chối',  C.danBg,  C.danger));
-        r1.appendChild(bdg('Đang xử lý',C.acBg,  C.accent));
-        r1.appendChild(bdg('Nháp',     C.s2,     C.t2));
-        badge('Badge/Default', r1);
-
-        var r2 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
-        r2.appendChild(bdgDot('Đã duyệt', C.sucBg, C.success, C.success));
-        r2.appendChild(bdgDot('Chờ duyệt',C.warnBg,C.warn,    C.warn));
-        r2.appendChild(bdgDot('Từ chối',  C.danBg, C.danger,  C.danger));
-        r2.appendChild(bdgDot('Đang xử lý',C.acBg, C.accent,  C.accent));
-        badge('Badge/Dot', r2);
-
-        var r3 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, wrap);
-        r3.appendChild(tag('Tất cả', true));
-        r3.appendChild(tag('Chờ tôi duyệt', false));
-        r3.appendChild(tag('Tôi đã tạo', false));
-        r3.appendChild(tag('Đã hoàn tất', false));
-        r3.appendChild(tag('Khẩn cấp', false));
-        badge('Tag', r3);
-      }
-
-      function buildNav(parent) {
-        var s = section('Navigation', 5, parent);
-        var b = s.body;
-        var grid = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:24,fill:noF(),pt:4}, b);
-
-        // Sidebar mock
-        var navCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:8}, grid);
-        var lbl1 = figma.createText(); lbl1.fontName=FR; lbl1.fontSize=10; lbl1.characters='Sidebar nav'; lbl1.fills=sol(C.t3); lbl1.textAutoResize='WIDTH_AND_HEIGHT'; navCol.appendChild(lbl1);
-        var nav = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:sol(C.s2),r:6,pl:16,pr:16,pt:12,pb:12,gap:2}, navCol);
-
-        function navSection(label) {
-          var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF(),pt:8,pb:4}, nav);
-          aT(label, {key:'Nav/Section',sz:10,font:FB,upper:true,ls:8,color:C.t3}, f);
-          badge('Nav/Section', f);
-        }
-        function navItem(label, active) {
-          var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:active?sol(C.acBg):noF(),r:4,pl:8,pr:8,pt:5,pb:5,gap:6}, nav);
-          aT(label, {key:active?'Nav/Item-Active':'Nav/Item',sz:11,font:active?FB:FR,color:active?C.accent:C.t2}, f);
-          if (active) badge('Nav/Item-Active', f);
-          else badge('Nav/Item', f);
-        }
-        navSection('Tờ trình');
-        navItem('Danh sách tờ trình', true);
-        navItem('Tạo tờ trình mới', false);
-        navItem('Chờ tôi phê duyệt', false);
-        navSection('Hệ thống');
-        navItem('Cài đặt', false);
-
-        // Breadcrumb
-        var bcCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:8}, grid);
-        var lbl2 = figma.createText(); lbl2.fontName=FR; lbl2.fontSize=10; lbl2.characters='Breadcrumb'; lbl2.fills=sol(C.t3); lbl2.textAutoResize='WIDTH_AND_HEIGHT'; bcCol.appendChild(lbl2);
-        var bc = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:4,fill:noF()}, bcCol);
-        function bcLink(label) { aT(label, {key:'Breadcrumb',sz:11,color:C.accent}, bc); }
-        function bcSep()  { var t=figma.createText(); t.fontName=FR; t.fontSize=11; t.characters='/'; t.fills=sol(C.t4); t.textAutoResize='WIDTH_AND_HEIGHT'; bc.appendChild(t); }
-        function bcCur(label) { aT(label, {key:'Breadcrumb/Current',sz:11,font:FB,color:C.t1}, bc); }
-        bcLink('Trang chủ'); bcSep(); bcLink('Tờ trình'); bcSep(); bcLink('Phê duyệt ngân sách'); bcSep(); bcCur('TT-2026-0291');
-        badge('Breadcrumb · Breadcrumb/Current', bcCol);
-      }
-
-      function buildNotif(parent) {
-        var s = section('Notification & Feedback', 5, parent);
-        var b = s.body;
-        var grid = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:24,fill:noF(),pt:4}, b);
-
-        // Notification list
-        var nCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:0}, grid);
-        function notifItem(dotC, title, body2, time2) {
-          var ni = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:10,fill:noF(),pt:10,pb:10}, nCol);
-          var dot = aF({hug:false,hugCross:false,fill:sol(dotC),r:99,w:8,h:8,pt:4}, ni);
-          var nd = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:2}, ni);
-          aT(title,  {key:'Notif/Title', sz:11,font:FB,color:C.t1}, nd);
-          aT(body2,  {key:'Notif/Body',  sz:11,color:C.t2,lh:150},  nd);
-          aT(time2,  {key:'Notif/Time',  sz:10,color:C.t4},          nd);
-        }
-        notifItem(C.accent,  'TT-2026-0291 vừa được phê duyệt',     'Giám đốc Phạm Minh Châu đã ký duyệt tờ trình ngân sách Q2.',  '5 phút trước · 09:42 15/04/2026');
-        notifItem(C.warn,    'Tờ trình yêu cầu bổ sung hồ sơ',      'TT-2026-0288 cần đính kèm báo cáo tài chính Q1.',             '2 giờ trước');
-
-        // Toast + Tooltip
-        var rCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:12}, grid);
-
-        var tlbl = figma.createText(); tlbl.fontName=FR; tlbl.fontSize=10; tlbl.characters='Toast'; tlbl.fills=sol(C.t3); tlbl.textAutoResize='WIDTH_AND_HEIGHT'; rCol.appendChild(tlbl);
-        var toast = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(C.dark),r:6,pl:16,pr:16,pt:10,pb:10,gap:10}, rCol);
-        aT('Tờ trình đã được gửi thành công', {key:'Toast/Message',sz:11,color:{r:1,g:1,b:1}}, toast);
-
-        var ttlbl = figma.createText(); ttlbl.fontName=FR; ttlbl.fontSize=10; ttlbl.characters='Tooltip'; ttlbl.fills=sol(C.t3); ttlbl.textAutoResize='WIDTH_AND_HEIGHT'; rCol.appendChild(ttlbl);
-        var tip = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(C.dark),r:4,pl:10,pr:10,pt:5,pb:5}, rCol);
-        aT('Nhấn để xem lịch sử phê duyệt', {key:'Tooltip',sz:10,color:{r:1,g:1,b:1}}, tip);
-      }
-
-      function buildApproval(parent) {
-        var s = section('Đặc thù tờ trình phê duyệt', 8, parent);
-        var b = s.body;
-        var grid = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:24,fill:noF(),pt:4}, b);
-
-        // Approval cards
-        var acCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:10}, grid);
-        var ac1lbl = figma.createText(); ac1lbl.fontName=FR; ac1lbl.fontSize=10; ac1lbl.characters='Approval signers'; ac1lbl.fills=sol(C.t3); ac1lbl.textAutoResize='WIDTH_AND_HEIGHT'; acCol.appendChild(ac1lbl);
-
-        function approvalCard(initials, avatarBg, avatarTx, name, role, status, statusC, comment, date) {
-          var card2 = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:sol(C.s2),stroke:C.border,r:10,pl:16,pr:16,pt:16,pb:16,gap:0,la:'STRETCH'}, acCol);
-          var row2 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:noF(),gap:12}, card2);
-          // Avatar
-          var av = aF({hug:false,hugCross:false,fill:sol(avatarBg),r:99,w:36,h:36,ja:'CENTER',align:'CENTER'}, row2);
-          var avT = figma.createText(); avT.fontName=FB; avT.fontSize=12; avT.characters=initials; avT.fills=sol(avatarTx); avT.textAutoResize='WIDTH_AND_HEIGHT'; avT.layoutAlign='CENTER'; av.appendChild(avT);
-          // Info
-          var info = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:2}, row2);
-          var nr = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()},info);
-          aT(name,   {key:'Approval/Name',   sz:13,font:FB,color:C.t1}, nr); badge('Approval/Name', nr);
-          aT(role,   {key:'Approval/Role',   sz:11,color:C.t3}, info);
-          var str = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()},info);
-          aT(status, {key:'Approval/Status', sz:11,font:FB,color:statusC}, str); badge('Approval/Status', str);
-          aT(comment,{key:'Approval/Comment',sz:13,color:C.t2,lh:170}, info);
-          var dr = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()},info);
-          aT(date,   {key:'Approval/Date',   sz:10,font:FM,color:C.t4}, dr); badge('Approval/Date', dr);
-          return card2;
-        }
-        approvalCard('PC', C.acBg, C.accent, 'Phạm Minh Châu','Giám đốc điều hành','✓ Đã phê duyệt',C.success,'Đồng ý với đề xuất. Yêu cầu báo cáo tiến độ hàng tháng.','15/04/2026 · 09:42 SA');
-        approvalCard('TL', C.danBg, C.danger, 'Trần Văn Lâm','Trưởng phòng Tài chính','✕ Từ chối',C.danger,'Ngân sách vượt quá hạn mức. Đề nghị điều chỉnh xuống ≤₫2,000,000,000.','14/04/2026 · 16:30 CH');
-
-        // Timeline + Code ref
-        var tlCol = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:8}, grid);
-        var tllbl = figma.createText(); tllbl.fontName=FR; tllbl.fontSize=10; tllbl.characters='Quy trình xử lý (Timeline)'; tllbl.fills=sol(C.t3); tllbl.textAutoResize='WIDTH_AND_HEIGHT'; tlCol.appendChild(tllbl);
-        var tlWrap = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:0}, tlCol);
-
-        function tlItem(stepLabel, descLabel, dotFill, textC) {
-          var ti = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:noF(),gap:10,pt:0,pb:16}, tlWrap);
-          var dot2 = aF({hug:false,hugCross:false,fill:sol(dotFill),stroke:dotFill,r:99,w:16,h:16}, ti);
-          var tc = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:2}, ti);
-          var sr = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()},tc);
-          aT(stepLabel, {key:'Timeline/Step',sz:11,font:FB,color:textC||C.t1}, sr); badge('Timeline/Step', sr);
-          var dr2 = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:6,fill:noF()},tc);
-          aT(descLabel, {key:'Timeline/Desc',sz:10,color:C.t3}, dr2); badge('Timeline/Desc', dr2);
-        }
-        tlItem('Tạo tờ trình',        'Nguyễn Văn An · 12/04/2026', C.success, C.t1);
-        tlItem('Trưởng phòng xét duyệt','Lê Thị Ngọc · 13/04/2026', C.success, C.t1);
-        tlItem('Giám đốc phê duyệt',  'Đang chờ · Hạn 20/04/2026',  C.white,   C.accent);
-        tlItem('Hoàn tất & lưu trữ',  'Chưa bắt đầu',               C.white,   C.t3);
-
-        // Code ref
-        var crlbl = figma.createText(); crlbl.fontName=FR; crlbl.fontSize=10; crlbl.characters='Code/Reference'; crlbl.fills=sol(C.t3); crlbl.textAutoResize='WIDTH_AND_HEIGHT'; tlCol.appendChild(crlbl);
-        var crRow = aF({dir:'HORIZONTAL',hug:true,hugCross:true,gap:8,fill:noF()}, tlCol);
-        function codeRef(label) {
-          var f = aF({dir:'HORIZONTAL',hug:true,hugCross:true,fill:sol(C.s2),stroke:C.border,r:4,pl:6,pr:6,pt:1,pb:1}, crRow);
-          aT(label, {key:'Code/Reference',sz:10,font:FM,color:C.t2}, f);
-          return f;
-        }
-        codeRef('TT-2026-0291'); codeRef('REF-CNTT-Q2-001'); codeRef('NQ-12/2026');
-        badge('Code/Reference', crRow);
-      }
-
-      // ── Build 3 BP frames ────────────────────────────────────────
-      var page = figma.currentPage;
-      // Remove old demo frames
-      for (var di = page.children.length-1; di >= 0; di--) {
-        var dc = page.children[di];
-        if (dc.name === 'Demo 1280' || dc.name === 'Demo 1440' || dc.name === 'Demo 1920') dc.remove();
-      }
-
-      var BPS = ['1280','1440','1920'];
-      var bpFrames = [];
-      var startX = 100, startY = 100, gapX = 120;
-      var curX = startX;
-
-      for (var bpi = 0; bpi < BPS.length; bpi++) {
-        var bp = BPS[bpi];
-        var bpW = parseInt(bp);
-
-        var bpF = aF({
-          name: 'Demo ' + bp,
-          dir: 'VERTICAL', hug: true, hugCross: false,
-          fill: sol(C.bg),
-          w: bpW, h: 100,
-          pt: 48, pb: 64, pl: 40, pr: 40, gap: 16,
-        }, null);
-
-        // Page title
-        var titleWrap = aF({dir:'VERTICAL',hug:true,hugCross:true,fill:noF(),gap:4}, bpF);
-        var titleTag = figma.createText(); titleTag.fontName=FR; titleTag.fontSize=10; titleTag.characters='Design System'; titleTag.fills=sol(C.accent); titleTag.textAutoResize='WIDTH_AND_HEIGHT'; titleTag.letterSpacing={unit:'PERCENT',value:10}; titleWrap.appendChild(titleTag);
-        var titleH = figma.createText(); titleH.fontName=FB; titleH.fontSize=28; titleH.characters='Typography Roles'; titleH.fills=sol(C.t1); titleH.textAutoResize='WIDTH_AND_HEIGHT'; titleWrap.appendChild(titleH);
-        var titleS = figma.createText(); titleS.fontName=FR; titleS.fontSize=14; titleS.characters='46 roles · 7 token sizes · Breakpoint ' + bp + 'px'; titleS.fills=sol(C.t3); titleS.textAutoResize='WIDTH_AND_HEIGHT'; titleWrap.appendChild(titleS);
-
-        buildPageLevel(bpF);
-        buildBody(bpF);
-        buildForm(bpF);
-        buildTable(bpF);
-        buildButton(bpF);
-        buildBadge(bpF);
-        buildNav(bpF);
-        buildNotif(bpF);
-        buildApproval(bpF);
-
-        page.appendChild(bpF);
-        bpF.x = curX; bpF.y = startY;
-        curX += bpW + gapX;
-
-        if (vsR && vsR.col && vsR.modeMap && vsR.modeMap[bp]) {
-          try { bpF.setExplicitVariableModeForCollection(vsR.col, vsR.modeMap[bp]); } catch(e) {}
-        }
-
-        bpFrames.push(bpF);
-      }
-
-      figma.viewport.scrollAndZoomIntoView(bpFrames);
-      figma.ui.postMessage({ type: 'demoCreated', text: '3 frames (1280 / 1440 / 1920) · ' + Object.keys(styleMap).length + ' text styles bound' });
-    } catch(e2) {
-      figma.ui.postMessage({ type: 'demoError', text: 'Lỗi: ' + e2.message });
-    }
+    await createTypographyDemo(msg.groupName || 'FAN Font');
     return;
   }
 
@@ -1178,19 +1221,17 @@ figma.ui.onmessage = async function(msg) {
     frame.setExplicitVariableModeForCollection(res.col, res.modeMap['1280']);
     var ar = autoApplyStyles(frame, groupName);
 
+    var reasonStr = '';
+    if (ar.skipped > 0) {
+      var topReasons = Object.entries(ar.skipReasons)
+        .sort(function(a,b){ return b[1]-a[1]; }).slice(0,3)
+        .map(function(e){ return e[1]+'×'+e[0]; });
+      reasonStr = ' ✗ bỏ qua: ' + ar.skipped + ' (' + topReasons.join(', ') + ')';
+    }
     if (frameIds.length === 1) {
-      var applyLine = '✓ Gán: ' + ar.applied + ' nodes';
-      if (ar.skipped > 0) {
-        var topReasons = Object.entries(ar.skipReasons)
-          .sort(function(a,b){ return b[1]-a[1]; }).slice(0,3)
-          .map(function(e){ return e[1]+'× '+e[0]; });
-        applyLine += '  ✗ bỏ qua: ' + ar.skipped + ' (' + topReasons.join(', ') + ')';
-      }
-      lines.push(applyLine);
+      lines.push('✓ Gán: ' + ar.applied + ' nodes' + reasonStr);
     } else {
-      var fLine = '[' + frame.name + '] ✓' + ar.applied + ' node';
-      if (ar.skipped > 0) fLine += ' ✗' + ar.skipped;
-      lines.push(fLine);
+      lines.push('[' + frame.name + '] ✓' + ar.applied + reasonStr);
     }
   }
 
