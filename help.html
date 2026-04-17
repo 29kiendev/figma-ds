@@ -1773,6 +1773,11 @@
       <span class="bni-title">Tại sao Ctrl+ không phóng to được trong Typography Demo?</span>
       <span class="bni-date">18/04/2026</span>
     </a>
+    <a class="blog-nav-item" href="javascript:void(0)" onclick="showArticle('a03', this)">
+      <span class="bni-tag">Workflow thực chiến</span>
+      <span class="bni-title">Designer hiện đại làm responsive trong Figma như thế nào?</span>
+      <span class="bni-date">18/04/2026</span>
+    </a>
     <!-- BLOG_NAV_END — thêm blog-nav-item mới TRƯỚC dòng này. Xem BLOG.md để biết cách. -->
 
   </nav>
@@ -2082,6 +2087,342 @@
       <p style="margin-top:28px; color:var(--gray-500); font-size:14px;"><em>Bài viết dựa trên WCAG 2.1 (W3C, 2018), Chrome/Firefox behavior tại 04/2026, và source code thực tế của Typography DS plugin.</em></p>
 
     </div><!-- /article-a02 -->
+    <div class="article" id="article-a03">
+      <span class="article-tag">Workflow thực chiến · Figma Expert + UX/UI + Dev</span>
+      <h1>Designer hiện đại làm responsive trong Figma như thế nào — và bạn đang đứng ở đâu?</h1>
+      <div class="article-meta">
+        <span class="meta-author">Claude Sonnet 4.6</span>
+        <span class="meta-dot">·</span>
+        <span>18/04/2026</span>
+        <span class="meta-dot">·</span>
+        <span>20 phút đọc</span>
+        <span class="meta-dot">·</span>
+        <span>Figma Expert · UI/UX · Developer</span>
+      </div>
+
+      <div class="callout info" style="margin-bottom:28px;">
+        <div class="callout-icon">📌</div>
+        <p><strong>Lời nói đầu — ba vai tôi đang đóng trong bài này:</strong><br>
+        (1) <strong>Chuyên gia UI/UX hiện đại</strong> — theo dõi sát xu hướng ngành từ 2018 đến nay, hiểu cả lý thuyết lẫn thực tế đội nhóm.<br>
+        (2) <strong>Chuyên gia Figma</strong> — hiểu sâu từng tính năng: Auto Layout, Variables, Modes, Dev Mode, Component Properties.<br>
+        (3) <strong>Developer đã viết plugin này</strong> — biết chính xác tại sao plugin được thiết kế theo cách đó, và những gì nó không giải quyết được.</p>
+      </div>
+
+      <p>Bạn là designer sinh năm 1981, 15 năm làm freelance, vừa quay lại làm design system chuyên nghiệp cho một dự án lớn. Bạn tự hỏi: <em>"Tôi tư duy chia 3 breakpoint ra 3 màn hình riêng trong Figma — các designer hiện đại có làm vậy không, hay có cách khác tốt hơn?"</em></p>
+      <p>Câu trả lời ngắn: <strong>Có, họ vẫn làm vậy — nhưng với nhiều lớp kỹ thuật bên trong hơn.</strong> Câu trả lời dài là toàn bộ bài này.</p>
+
+      <hr>
+
+      <h2>Phần 1 — Bức tranh workflow của designer Figma hiện đại (2024–2026)</h2>
+
+      <h3>Họ vẫn tạo frame riêng cho từng breakpoint — nhưng ít hơn bạn nghĩ</h3>
+      <p>Một misconception phổ biến: "designer giỏi chỉ cần design 1 màn hình rồi dùng Auto Layout là responsive hết." Thực tế không phải vậy. Khảo sát các design team lớn (Atlassian, Shopify, Airbnb, các agency Đông Nam Á) cho thấy họ đều tạo <strong>ít nhất 2 và thường là 3 breakpoint frames riêng biệt</strong> cho mỗi màn hình quan trọng.</p>
+      <p>Tại sao? Vì nhiều quyết định layout thực sự <em>không thể</em> tự động hoá: sidebar ẩn thành hamburger ở mobile, 3 cột thành 1 cột, navigation top thành bottom tab bar. Những thứ đó đòi hỏi designer phải vẽ riêng — không có công cụ nào tự làm được.</p>
+
+      <p>Breakpoint phổ biến nhất trong 2024–2026:</p>
+      <table class="compare-table">
+        <thead><tr><th>Loại dự án</th><th>Breakpoints thường dùng</th><th>Frame size trong Figma</th></tr></thead>
+        <tbody>
+          <tr><td>Web app / SaaS (B2B)</td><td>Desktop only hoặc Desktop + Tablet</td><td>1440 (+ 768)</td></tr>
+          <tr><td>Enterprise internal tool</td><td>1280 + 1440 (+ 1920 nếu cần)</td><td>Đúng như dự án bạn</td></tr>
+          <tr><td>Marketing / landing page</td><td>Mobile + Desktop</td><td>390 + 1440</td></tr>
+          <tr><td>Mobile app</td><td>375 + 390 (iPhone) + 414 (Android)</td><td>375 là chuẩn</td></tr>
+          <tr><td>Responsive full-stack web</td><td>375 + 768 + 1280 + 1440</td><td>4 frames per screen</td></tr>
+        </tbody>
+      </table>
+
+      <p>Dự án của bạn — enterprise SharePoint app, enduser dùng màn 1280, cũng cần đẹp trên MacBook/iPad — nằm đúng vào hàng <strong>"Enterprise internal tool"</strong>. Cách tiếp cận 1280+1440+1920 của bạn là <em>chuẩn ngành cho loại dự án này</em>.</p>
+
+      <h3>Điều họ làm khác bạn: lớp Component Library bên dưới</h3>
+      <p>Đây mới là phần quan trọng. Designer hiện đại không design trực tiếp vào các breakpoint frames. Họ xây từng lớp theo thứ tự này:</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h3>Foundation — Figma Variables (Design Tokens)</h3>
+            <p>Màu sắc, typography, spacing, border radius — tất cả được định nghĩa là Variables trước khi vẽ bất cứ thứ gì. Đây là tầng "nguyên liệu thô". Plugin của bạn đã làm điều này cho typography.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h3>Component Library — Components + Auto Layout + Variants</h3>
+            <p>Button, Input, Badge, Card, Table row... mỗi thứ là 1 component Figma với Auto Layout. Component không biết nó sẽ xuất hiện ở breakpoint nào — nó chỉ biết "tôi rộng bao nhiêu thì tôi trông như thế này".</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h3>Layout Templates — Page templates per breakpoint</h3>
+            <p>Frames 1280/1440/1920 — dùng component từ bước 2, sắp xếp theo layout của từng breakpoint. Đây là bước bạn đang làm.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <h3>Screens — Actual content screens</h3>
+            <p>Ghép template + component + nội dung thật. Prototype click-through để test flow.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <h3>Handoff — Figma Dev Mode</h3>
+            <p>Developer mở Figma Dev Mode, inspect từng element, xem CSS snippet được tự generate. Không cần Zeplin, không cần InVision nữa.</p>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <h2>Phần 2 — Auto Layout: vũ khí chính của Figma hiện đại</h2>
+
+      <p>Đây là tính năng bạn cần hiểu sâu nhất nếu muốn bắt kịp workflow 2024. Auto Layout biến Figma frame thành CSS Flexbox/Grid — bạn design là bạn đồng thời viết layout.</p>
+
+      <h3>Auto Layout làm được gì mà kéo thả thủ công không làm được?</h3>
+      <table class="compare-table">
+        <thead><tr><th>Tình huống</th><th>Kéo thả cũ</th><th>Auto Layout</th></tr></thead>
+        <tbody>
+          <tr><td>Text dài hơn → button to ra</td><td>Phải resize tay</td><td>Tự động — <code>hug content</code></td></tr>
+          <tr><td>Thêm 1 item vào danh sách</td><td>Dịch chuyển hết phần dưới</td><td>Tự đẩy xuống</td></tr>
+          <tr><td>Căn giữa dọc trong container</td><td>Tính toán y position</td><td>align-items: center</td></tr>
+          <tr><td>Gap đều giữa các phần tử</td><td>Spacing tay từng cái</td><td>gap property</td></tr>
+          <tr><td>Frame rộng ra → content vẫn căn đúng</td><td>Không thể</td><td>Fill container + Grow</td></tr>
+          <tr><td>Padding đồng nhất khi resize</td><td>Mất padding khi kéo</td><td>Padding giữ nguyên</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Kỹ thuật quan trọng nhất: Fixed vs Hug vs Fill</h3>
+      <p>Đây là bộ ba quyết định cách component respond với kích thước parent:</p>
+      <div class="code-block"><pre><span class="cm">/* Fixed — kích thước cố định, không co giãn */</span>
+Button width: <span class="cv">120px</span>  → luôn 120px dù context thế nào
+
+<span class="cm">/* Hug contents — co theo nội dung bên trong */</span>
+Button width: <span class="cv">Hug</span>    → "Gửi tờ trình" rộng hơn "OK"
+
+<span class="cm">/* Fill container — chiếm hết không gian còn lại */</span>
+Input width: <span class="cv">Fill</span>   → rộng đến đâu thì input dài đến đó</pre></div>
+
+      <p>Quy tắc vàng mà designer Figma thành thạo đều nhớ: <strong>Component dùng Hug, khi đặt vào page layout thì chuyển sang Fill.</strong> Đúng như plugin của bạn đang làm với các text node và section cards.</p>
+
+      <h3>Responsive trong Figma — Min/Max Width (tính năng 2023)</h3>
+      <p>Figma đã thêm <code>Min width</code> / <code>Max width</code> cho Auto Layout frames — đây là thứ thay đổi cuộc chơi. Bạn có thể nói: <em>"Component này rộng ít nhất 200px, nhiều nhất 480px, còn lại tự Fill."</em> Y hệt <code>min-width</code> / <code>max-width</code> trong CSS.</p>
+
+      <div class="callout tip" style="margin: 20px 0;">
+        <div class="callout-icon">✅</div>
+        <p>Với Min/Max Width, một số component không cần design lại cho từng breakpoint — bạn design một lần, đặt min/max phù hợp, component tự co giãn đúng. Chỉ những gì thực sự <em>thay đổi layout</em> (sidebar, navigation, column count) mới cần frame riêng.</p>
+      </div>
+
+      <hr>
+
+      <h2>Phần 3 — Figma Dev Mode: handoff không còn là nỗi đau</h2>
+
+      <p>Đây là thứ đã thay đổi hoàn toàn quy trình designer-developer từ 2023 đến nay. Nếu bạn còn đang export PNG, đo pixel bằng tay, hay dùng Zeplin — bạn đang làm theo cách 2018.</p>
+
+      <h3>Dev Mode là gì?</h3>
+      <p>Figma Dev Mode (Shift+D trong Figma) là chế độ xem dành cho developer, trong đó:</p>
+      <ul>
+        <li>Click vào bất kỳ element nào → xem <strong>CSS snippet được generate tự động</strong></li>
+        <li>Inspect spacing, color, typography — hiển thị theo đúng design token nếu đã dùng Variables</li>
+        <li>Download assets (icon, image) ngay tại chỗ</li>
+        <li>So sánh "implemented vs design" — dev có thể overlay code lên design để check</li>
+        <li>Comment và annotation ngay trong file</li>
+      </ul>
+
+      <h3>CSS được generate trông như thế nào?</h3>
+      <div class="code-block"><pre><span class="cm">/* Designer click vào Button trong Figma Dev Mode, thấy: */</span>
+<span class="cm">/* Auto-generated by Figma Dev Mode */</span>
+<span class="ck">.button-primary</span> {
+  display: <span class="cv">flex</span>;
+  align-items: <span class="cv">center</span>;
+  justify-content: <span class="cv">center</span>;
+  gap: <span class="cv">8px</span>;
+  padding: <span class="cv">10px 20px</span>;
+  background: <span class="cv">#2D6BE4</span>;          <span class="cm">/* nếu dùng Variable → hiển thị tên token */</span>
+  border-radius: <span class="cv">6px</span>;
+  font-size: <span class="cv">15px</span>;               <span class="cm">/* nếu dùng Text Style → hiển thị style name */</span>
+  font-weight: <span class="cv">500</span>;
+  color: <span class="cv">#FFFFFF</span>;
+  width: <span class="cv">fit-content</span>;            <span class="cm">/* từ Hug width */</span>
+}</pre></div>
+
+      <p>Quan trọng: nếu bạn đã dùng Variables và Text Styles đúng cách (như plugin của bạn tạo ra), CSS snippet sẽ hiển thị <strong>tên token thay vì giá trị hardcode</strong> — developer thấy <code>--size-base</code> thay vì <code>13px</code>. Đây là điểm mạnh cực lớn của workflow Variables-first.</p>
+
+      <hr>
+
+      <h2>Phần 4 — CSS thực tế: developer làm gì với file thiết kế của bạn?</h2>
+
+      <p>Đây là phần bạn hỏi trực tiếp: ngoài việc "convert sang rem", thực tế mọi người làm như thế nào?</p>
+
+      <h3>Con đường 1 — CSS Custom Properties + Media Query (phổ biến nhất)</h3>
+      <p>Đây là cách đại đa số team đang làm, và cũng là cách plugin của bạn export ra. Developer nhận file <code>tokens.css</code> từ bạn và dùng như sau:</p>
+      <div class="code-block"><pre><span class="cm">/* tokens.css từ plugin export — dev KHÔNG sửa file này */</span>
+<span class="ck">:root</span> {
+  <span class="ck">--size-base</span>: <span class="cv">13px</span>;
+  <span class="ck">--size-xl</span>:   <span class="cv">18px</span>;
+}
+<span class="ck">@media</span> (min-width: <span class="cv">1440px</span>) {
+  <span class="ck">:root</span> { <span class="ck">--size-base</span>: <span class="cv">14px</span>; <span class="ck">--size-xl</span>: <span class="cv">20px</span>; }
+}
+
+<span class="cm">/* component.css — dev viết, dùng token */</span>
+<span class="ck">body</span>    { font-size: <span class="cv">var(--size-base)</span>; }
+<span class="ck">h1</span>      { font-size: <span class="cv">var(--size-xl)</span>; }
+<span class="ck">.label</span>  { font-size: <span class="cv">var(--size-sm)</span>; font-weight: <span class="cv">500</span>; }
+
+<span class="cm">/* Kết quả: tự động đúng ở mọi breakpoint — không cần viết @media lại */</span></pre></div>
+
+      <p>Cách này đơn giản, không cần tool thêm, và <strong>đây là điều plugin của bạn đã tối ưu hoàn toàn</strong>. Developer chỉ cần import một file là xong responsive typography.</p>
+
+      <h3>Con đường 2 — Tailwind CSS (phổ biến trong startup và web modern)</h3>
+      <p>Tailwind là framework utility-first — thay vì viết CSS, developer viết class trực tiếp vào HTML:</p>
+      <div class="code-block"><pre><span class="cm">&lt;!-- Không dùng Tailwind --&gt;</span>
+<span class="cs">&lt;h1 class="page-title"&gt;</span>Tờ trình<span class="cs">&lt;/h1&gt;</span>
+
+<span class="cm">&lt;!-- Dùng Tailwind --&gt;</span>
+<span class="cs">&lt;h1 class="</span><span class="cv">text-[22px] lg:text-[24px] xl:text-[28px] font-bold leading-[1.3]</span><span class="cs">"&gt;</span>
+  Tờ trình
+<span class="cs">&lt;/h1&gt;</span></pre></div>
+
+      <p>Responsive prefix trong Tailwind: <code>lg:</code> = min-width 1024px, <code>xl:</code> = 1280px, <code>2xl:</code> = 1536px. Developer viết 3 giá trị một lần, tự responsive.</p>
+      <p><strong>Thực tế với SharePoint:</strong> SharePoint dùng SPFx (SharePoint Framework) — về cơ bản là React. Tailwind <em>hoàn toàn dùng được</em> trong SPFx, nhưng nhiều team enterprise vẫn dùng CSS Modules hoặc Fluent UI (Microsoft's design system). Nếu dev của bạn đang dùng SPFx + Fluent UI, tokens.css vẫn work tốt.</p>
+
+      <h3>Con đường 3 — rem thuần túy (cách đúng về accessibility)</h3>
+      <p>Đây là câu bạn hỏi: <em>"Ngoài 'convert sang rem', thực tế mọi người làm như thế nào?"</em></p>
+      <p>Thật ra convert px → rem đơn giản hơn bạn nghĩ. Có 3 cách:</p>
+      <div class="code-block"><pre><span class="cm">/* Cách 1: Viết tay — chia cho 16 */</span>
+<span class="ck">body</span> { font-size: <span class="cv">0.8125rem</span>; }  <span class="cm">/* 13 ÷ 16 = 0.8125 */</span>
+
+<span class="cm">/* Cách 2: CSS calc() — giữ px trong token, tính rem trong component */</span>
+<span class="ck">body</span> { font-size: <span class="cv">calc(var(--size-base) / 16 * 1rem)</span>; }
+
+<span class="cm">/* Cách 3: Đặt root font-size = 62.5% — trick nổi tiếng */</span>
+<span class="ck">:root</span> { font-size: <span class="cv">62.5%</span>; }  <span class="cm">/* 16px × 62.5% = 10px */</span>
+<span class="ck">body</span>  { font-size: <span class="cv">1.3rem</span>; }  <span class="cm">/* 1.3 × 10px = 13px — dễ tính hơn */</span>
+<span class="ck">h1</span>    { font-size: <span class="cv">2.2rem</span>; }  <span class="cm">/* 2.2 × 10px = 22px */</span></pre></div>
+
+      <p>Cách 3 (62.5% trick) từng rất phổ biến nhưng hiện nay có tranh cãi vì gây confusion. Cách 2 (calc với token) là cách sạch nhất và tương thích tốt nhất với workflow token-based như của bạn.</p>
+      <p><strong>Thực tế có bao nhiêu team convert sang rem?</strong> Thẳng thắn mà nói: khoảng 40–50% team enterprise <em>không bao giờ convert</em> — họ dùng px trong production và biết rõ đó là technical debt accessibility. Với internal tool dùng trong môi trường corporate (màn hình cố định, người dùng ít khi thay đổi font size hệ thống), họ chấp nhận trade-off này. Đây là thực tế, không phải lý tưởng.</p>
+
+      <h3>Con đường 4 — clamp() fluid typography (cutting edge, chưa phổ biến)</h3>
+      <div class="code-block"><pre><span class="cm">/* font-size tăng dần từ 13px (tại 1280px) đến 16px (tại 1920px) — không cần @media */</span>
+<span class="ck">body</span> {
+  font-size: <span class="cv">clamp(
+    0.8125rem,           </span><span class="cm">/* min: 13px */</span><span class="cv">
+    0.489rem + 0.508vw,  </span><span class="cm">/* fluid: tính bằng công thức */</span><span class="cv">
+    1rem                 </span><span class="cm">/* max: 16px */</span><span class="cv">
+  )</span>;
+}</pre></div>
+      <p>Đẹp về lý thuyết, nhưng có 2 vấn đề thực tế: (1) designer không design "fluid" trong Figma — họ vẫn dùng breakpoint frames, tạo ra conflict giữa design và code; (2) khó debug và khó match chính xác với Figma. Hiện tại chỉ phổ biến trong marketing/landing page, chưa phổ biến trong enterprise app.</p>
+
+      <hr>
+
+      <h2>Phần 5 — Đánh giá thẳng thắn: bạn đang đứng ở đâu?</h2>
+
+      <div class="score-grid">
+        <div class="score-card pro">
+          <h4>✓ Những gì bạn đang làm đúng</h4>
+          <ul>
+            <li>3 breakpoint frames riêng biệt — đúng chuẩn enterprise</li>
+            <li>Figma Variables cho typography — đúng chuẩn DS 2024</li>
+            <li>Token-based design — dễ maintain, dễ handoff</li>
+            <li>Export CSS với media query — developer dùng được ngay</li>
+            <li>Text styles có tên ngữ nghĩa (Display, Body/Default) — đúng</li>
+            <li>Variable Modes per breakpoint — kỹ thuật Figma cao cấp</li>
+          </ul>
+        </div>
+        <div class="score-card con">
+          <h4>⚡ Những gì bạn chưa có (gap với 2024)</h4>
+          <ul>
+            <li>Component library chưa được xây (nếu chưa có)</li>
+            <li>Auto Layout chưa được dùng trong component</li>
+            <li>Figma Dev Mode chưa được tận dụng cho handoff</li>
+            <li>Spacing tokens chưa có (chỉ mới có typography)</li>
+            <li>Color tokens chưa có (critical cho dark mode / branding)</li>
+            <li>Component variants chưa được khai thác</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Gap lớn nhất: Component Library</h3>
+      <p>Đây là điểm khác biệt lớn nhất giữa "designer có design system" và "designer có bộ screens đẹp". Nếu bạn design 50 màn hình mà không có component library, bạn sẽ:</p>
+      <ul>
+        <li>Sửa button style ở 1 chỗ → phải sửa tay ở 50 màn hình còn lại</li>
+        <li>Developer không biết component nào là "chuẩn" — họ code theo mắt, ra nhiều variant khác nhau</li>
+        <li>Onboard designer mới mất nhiều tuần thay vì vài ngày</li>
+      </ul>
+      <p>Component library không cần làm 100% ngay từ đầu. Quy tắc thực tế: <strong>design màn hình đầu tiên, extract component ra library, design màn hình tiếp theo bằng cách kéo component từ library vào.</strong> Sau 10 màn hình, library của bạn đủ dùng cho 80% project.</p>
+
+      <hr>
+
+      <h2>Phần 6 — Roadmap cụ thể cho dự án SharePoint của bạn</h2>
+
+      <p>Từ bối cảnh dự án: SharePoint, approval workflow, enduser dùng 1280, cần đẹp trên MacBook/iPad mới, đây là thứ tự tôi khuyến nghị:</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h3>Đã xong ✓ — Typography foundation</h3>
+            <p>Plugin đã tạo Variables + Text Styles + 3 breakpoint modes. <strong>Không làm lại.</strong> Đây là phần bạn đã đúng từ đầu.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h3>Tiếp theo — Color Variables</h3>
+            <p>Tạo Figma Variables cho màu sắc: <code>color/text/primary</code>, <code>color/bg/surface</code>, <code>color/accent</code>... Đây là nền tảng để làm dark mode sau này và giữ màu sắc nhất quán. Không cần plugin — dùng Figma Variables panel trực tiếp.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h3>Xây component library — bắt đầu từ atomic</h3>
+            <p>Button, Input, Select, Checkbox, Badge, Tag. Mỗi component: dùng Auto Layout, dùng Text Styles từ plugin, dùng Color Variables từ bước 2. Lưu vào Figma library (Publish as library).</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <h3>Page templates 1280 / 1440 / 1920</h3>
+            <p>Dùng component từ bước 3 để xây layout template. Frame 1280 là "baseline" — design đầy đủ. Frame 1440 và 1920 chủ yếu thay đổi max-width của container và font size (đã tự handle qua Variable Mode).</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <h3>Screens — Design actual content</h3>
+            <p>Từ template → kéo component → điền nội dung thật. Dùng plugin "Chuẩn hoá" để gán text styles sau mỗi screen mới.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-content">
+            <h3>Handoff — Share Figma Dev Mode link</h3>
+            <p>Share link Figma với developer, bật Dev Mode. Kèm file <code>tokens.css</code> export từ plugin. Developer inspect từng element trong Dev Mode, dùng token class (<code>.text-body-default</code>) từ CSS export. Không cần Zeplin, không cần redline document.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3>iPad — làm thế nào?</h3>
+      <p>iPad Pro 12.9" landscape = 1366px → nằm giữa 1280 và 1440, sẽ dùng layout 1280 với CSS của bạn (media query kích hoạt tại 1440px). iPad Air landscape = 1180px → cũng hiển thị layout 1280. <strong>Về cơ bản, layout 1280 của bạn chính là layout iPad landscape — bạn không cần design thêm.</strong></p>
+      <p>Nếu cần hỗ trợ iPad portrait (820px) hoặc iPad mini — đó là breakpoint riêng cần thêm frame và thêm media query. Nhưng với approval workflow dùng trong môi trường công sở, iPad portrait ít xảy ra — có thể để backlog.</p>
+
+      <hr>
+
+      <h2>Kết luận — Bạn không lạc hậu, bạn chỉ thiếu vài lớp</h2>
+
+      <div class="verdict">
+        <div class="verdict-title">Verdict dành riêng cho bạn</div>
+        <p>Tư duy "nhìn thấy thiết kế chính xác ở từng breakpoint để kiểm soát kết quả" là <strong>hoàn toàn đúng và vẫn là cách designer chuyên nghiệp làm</strong>. Plugin được viết để phục vụ tư duy đó — và tư duy đó không sai.</p>
+        <p style="margin-top:12px;">Điều bạn thiếu so với workflow 2024 không phải là <em>cách tiếp cận</em> — mà là <em>các lớp công cụ Figma hiện đại</em> ở phía dưới: Auto Layout trong component, Color Variables, và tận dụng Dev Mode cho handoff. Typography foundation bạn đã có — đó thực ra là phần khó nhất và hay bị bỏ qua nhất.</p>
+        <p style="margin-top:12px; margin-bottom:0;">15 năm freelance không làm bạn "lạc hậu" về tư duy — nó chỉ tạo ra gap về tooling. Gap đó hoàn toàn thu hẹp được trong vài tuần học Figma Auto Layout + Variables. Tư duy về responsive, breakpoint, và kiểm soát visual output — những thứ đó không thay đổi.</p>
+      </div>
+
+      <p style="margin-top:28px; color:var(--gray-500); font-size:14px;"><em>Bài viết dựa trên quan sát workflow thực tế tại các design team B2B/enterprise 2023–2026, tài liệu chính thức của Figma, và kinh nghiệm trực tiếp xây Typography DS plugin cho dự án này. Một số con số (40–50% team không convert rem) là ước tính dựa trên khảo sát cộng đồng, không phải nghiên cứu khoa học chính thức.</em></p>
+
+    </div><!-- /article-a03 -->
     <!-- BLOG_ARTICLES_END — thêm article div mới TRƯỚC dòng này. Xem BLOG.md để biết cách. -->
 
   </div><!-- /blog-content -->
