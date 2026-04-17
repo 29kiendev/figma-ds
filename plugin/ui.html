@@ -267,6 +267,37 @@
     flex-shrink: 0; padding: 0 16px 10px; font-size: 11px; color: #666;
     text-align: center; min-height: 14px; line-height: 1.5;
   }
+
+  /* ─── Tab 3: Token Reference ─── */
+  #tab3 { max-height: 460px; overflow-y: auto; padding: 0 0 16px; }
+  #tab3.active { display: block; }
+  .ref-section { padding: 10px 16px 0; }
+  .ref-section + .ref-section { border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px; }
+  .ref-section-title {
+    font-size: 10px; font-weight: bold; color: #6b7280;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+  }
+  .ref-table { width: 100%; border-collapse: collapse; }
+  .ref-table th {
+    font-size: 10px; font-weight: bold; color: #9ca3af; text-transform: uppercase;
+    padding: 0 4px 5px; border-bottom: 2px solid #e5e7eb; text-align: left;
+    white-space: nowrap;
+  }
+  .ref-table th.bp { text-align: center; }
+  .ref-table th.bp-hi { text-align: center; color: #2563eb; }
+  .ref-table td { padding: 4px 4px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  .ref-table tr:last-child td { border-bottom: none; }
+  .ref-table tr:hover td { background: #f9fafb; }
+  .ref-tok {
+    font-family: 'Courier New', monospace; font-size: 10px; font-weight: bold;
+    color: #2563eb; background: #eff6ff; border-radius: 3px; padding: 1px 4px;
+    white-space: nowrap;
+  }
+  .ref-bp { text-align: center; font-size: 11px; color: #374151; }
+  .ref-bp-hi { text-align: center; font-size: 11px; font-weight: bold; color: #1d4ed8; }
+  .ref-use { font-size: 10px; color: #6b7280; line-height: 1.4; }
+  .ref-role { font-size: 11px; color: #111; white-space: nowrap; }
+  .ref-wt { text-align: center; font-size: 10px; color: #6b7280; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -284,6 +315,7 @@
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab(1)">Chuẩn hoá</button>
   <button class="tab-btn" onclick="switchTab(2)">Tokens</button>
+  <button class="tab-btn" onclick="switchTab(3)">Tham chiếu</button>
 </div>
 
 <!-- ─── Tab 1: Chuẩn hoá ─── -->
@@ -408,16 +440,112 @@
 
 </div>
 
+<!-- ─── Tab 3: Token Reference ─── -->
+<div id="tab3" class="tab-content">
+  <!-- Bảng 1: Font Size Tokens -->
+  <div class="ref-section">
+    <div class="ref-section-title">Font Size Tokens</div>
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th class="bp">1280</th>
+          <th class="bp-hi">1440</th>
+          <th class="bp">1920</th>
+          <th>Dùng cho</th>
+        </tr>
+      </thead>
+      <tbody id="ref-size-rows"></tbody>
+    </table>
+  </div>
+
+  <!-- Bảng 2: Text Roles -->
+  <div class="ref-section">
+    <div class="ref-section-title">Text Roles (46 styles)</div>
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Token</th>
+          <th class="ref-wt">Wt</th>
+          <th>Dùng cho</th>
+        </tr>
+      </thead>
+      <tbody id="ref-roles-rows"></tbody>
+    </table>
+  </div>
+</div>
+
 <script>
-  var SIZE_KEYS = ['2xs','xs','sm','base','md','lg','xl','2xl'];
-  var LH_KEYS   = ['2xs','xs','sm','base','md','lg','xl','2xl'];
+  var SIZE_KEYS = ['xs','sm','base','md','lg','xl','2xl'];
+  var LH_KEYS   = ['xs','sm','base','md','lg','xl','2xl'];
   var LS_KEYS   = ['0','tight','tighter'];
   var BPS = ['1280','1440','1920'];
-  var SIZE_TOKEN_OPTS = ['2xs','xs','sm','base','md','lg','xl','2xl'];
+  var SIZE_TOKEN_OPTS = ['xs','sm','base','md','lg','xl','2xl'];
   var WEIGHT_OPTS = [400, 500, 600];
   var STYLE_GROUP_ORDER = ['Page','Body','Form','Table','Button','Badge','Nav','Notif','Approval','Code'];
 
   var prevSelectedIds = {}; // lưu selection trước khi refresh
+
+  // ─── Token Reference data ─────────────────────────────────────────
+  var SIZE_USE_MAP = {
+    'xs':   'Badge bảng, chip inline, tab nhỏ, tag, tooltip',
+    'sm':   'Label form, helper, caption, overline, breadcrumb',
+    'base': 'Body text, input value, checkbox label, td chính',
+    'md':   'Lead paragraph, button large',
+    'lg':   'Subtitle, card title, tab heading, drawer header',
+    'xl':   'Title, section heading, stat value, H2 editor',
+    '2xl':  'Display, page title, H1 editor',
+  };
+
+  var REF_ROLES = [
+    { role: 'Display',            token: '2xl',  weight: 600, use: 'Tên tờ trình, page title' },
+    { role: 'Title',              token: 'xl',   weight: 600, use: 'Section heading' },
+    { role: 'Subtitle',           token: 'lg',   weight: 500, use: 'Card title, tab, drawer header' },
+    { role: 'Overline',           token: 'sm',   weight: 600, use: 'Nhóm section — uppercase, letter-spacing' },
+    { role: 'Lead',               token: 'md',   weight: 400, use: 'Intro paragraph, tóm tắt' },
+    { role: 'Body/Default',       token: 'base', weight: 400, use: 'Nội dung chính' },
+    { role: 'Body/Strong',        token: 'base', weight: 600, use: 'Nhấn mạnh trong đoạn' },
+    { role: 'Body/Secondary',     token: 'base', weight: 400, use: 'Nội dung phụ — màu muted' },
+    { role: 'Label/Default',      token: 'sm',   weight: 500, use: 'Tên trường form' },
+    { role: 'Label/Required',     token: 'sm',   weight: 500, use: 'Tên trường + dấu * đỏ' },
+    { role: 'Label/Disabled',     token: 'sm',   weight: 500, use: 'Màu muted' },
+    { role: 'Input/Value',        token: 'base', weight: 400, use: 'Giá trị người dùng nhập' },
+    { role: 'Input/Placeholder',  token: 'base', weight: 400, use: 'Placeholder — màu muted' },
+    { role: 'Helper/Default',     token: 'sm',   weight: 400, use: 'Hướng dẫn dưới field' },
+    { role: 'Helper/Error',       token: 'sm',   weight: 400, use: 'Lỗi — màu đỏ' },
+    { role: 'Helper/Success',     token: 'sm',   weight: 400, use: 'Hợp lệ — màu xanh' },
+    { role: 'Table/Header',       token: 'xs',   weight: 600, use: 'Tiêu đề cột — uppercase' },
+    { role: 'Table/Cell',         token: 'sm',   weight: 400, use: 'Giá trị ô chính' },
+    { role: 'Table/Cell-Bold',    token: 'sm',   weight: 600, use: 'Ô nhấn mạnh' },
+    { role: 'Table/Cell-Sub',     token: 'xs',   weight: 400, use: 'Dòng phụ trong ô' },
+    { role: 'Table/Cell-Mono',    token: 'xs',   weight: 400, use: 'Mã số, ID — monospace' },
+    { role: 'Table/Footer',       token: 'xs',   weight: 500, use: 'Tổng cộng cuối bảng' },
+    { role: 'Button/Large',       token: 'md',   weight: 500, use: 'Primary action' },
+    { role: 'Button/Default',     token: 'sm',   weight: 500, use: 'Secondary, ghost' },
+    { role: 'Button/Small',       token: 'xs',   weight: 500, use: 'Compact, inline' },
+    { role: 'Badge/Default',      token: 'xs',   weight: 500, use: 'Trạng thái — pill' },
+    { role: 'Badge/Dot',          token: 'xs',   weight: 500, use: 'Trạng thái + dot màu' },
+    { role: 'Tag',                token: 'xs',   weight: 500, use: 'Filter chip' },
+    { role: 'Nav/Item',           token: 'sm',   weight: 400, use: 'Menu item' },
+    { role: 'Nav/Item-Active',    token: 'sm',   weight: 600, use: 'Menu item active' },
+    { role: 'Nav/Section',        token: 'xs',   weight: 600, use: 'Nhóm menu — uppercase' },
+    { role: 'Breadcrumb',         token: 'sm',   weight: 400, use: 'Link' },
+    { role: 'Breadcrumb/Current', token: 'sm',   weight: 500, use: 'Trang hiện tại' },
+    { role: 'Notif/Title',        token: 'sm',   weight: 500, use: 'Tiêu đề thông báo' },
+    { role: 'Notif/Body',         token: 'sm',   weight: 400, use: 'Nội dung thông báo' },
+    { role: 'Notif/Time',         token: 'xs',   weight: 400, use: 'Thời gian — màu muted' },
+    { role: 'Toast/Message',      token: 'sm',   weight: 400, use: 'Popup nhanh' },
+    { role: 'Tooltip',            token: 'xs',   weight: 400, use: 'Hover tooltip' },
+    { role: 'Approval/Name',      token: 'base', weight: 600, use: 'Tên người ký' },
+    { role: 'Approval/Role',      token: 'sm',   weight: 400, use: 'Chức danh' },
+    { role: 'Approval/Status',    token: 'sm',   weight: 500, use: 'Trạng thái ký' },
+    { role: 'Approval/Comment',   token: 'base', weight: 400, use: 'Ý kiến phê duyệt' },
+    { role: 'Approval/Date',      token: 'xs',   weight: 400, use: 'Ngày ký — monospace' },
+    { role: 'Timeline/Step',      token: 'sm',   weight: 500, use: 'Tên bước' },
+    { role: 'Timeline/Desc',      token: 'xs',   weight: 400, use: 'Mô tả bước' },
+    { role: 'Code/Reference',     token: 'xs',   weight: 500, use: 'Mã tờ trình — monospace' },
+  ];
 
   // ─── Tab switching ────────────────────────────────────────────────
   function switchTab(n) {
@@ -425,6 +553,7 @@
     document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
     document.getElementById('tab' + n).classList.add('active');
     document.querySelectorAll('.tab-btn')[n-1].classList.add('active');
+    if (n === 3) buildRefSizeTable();
   }
 
   // ─── Accordion ────────────────────────────────────────────────────
@@ -830,7 +959,7 @@
     if (!msg) return;
 
     if (msg.type === 'frames')    { populateFrames(msg.data); }
-    if (msg.type === 'tokenData') { populateTokenData(msg.data); }
+    if (msg.type === 'tokenData') { populateTokenData(msg.data); buildRefSizeTable(); }
     if (msg.type === 'styleData') { buildStylesUI(msg.data); }
 
     if (msg.type === 'done') {
@@ -861,7 +990,7 @@
     var styleDefs = collectStyleData();
     var groupName = document.getElementById('group-name').value.trim() || 'FAN Font';
     var BPS_G = ['1280','1440','1920'];
-    var SIZE_KEYS_G = ['2xs','xs','sm','base','md','lg','xl','2xl'];
+    var SIZE_KEYS_G = ['xs','sm','base','md','lg','xl','2xl'];
     var LS_KEYS_G = ['0','tight','tighter'];
     var now = new Date().toLocaleDateString('vi-VN');
     var lines = [];
@@ -948,10 +1077,53 @@
     setTimeout(function() { btn.textContent = orig; }, 2500);
   }
 
+  // ─── Token Reference tables ───────────────────────────────────────
+  function buildRefSizeTable() {
+    var data = collectTokenData();
+    var tbody = document.getElementById('ref-size-rows');
+    tbody.innerHTML = '';
+    SIZE_KEYS.forEach(function(key) {
+      var tr = document.createElement('tr');
+      var tdTok = document.createElement('td');
+      tdTok.innerHTML = '<span class="ref-tok">' + key + '</span>';
+      tr.appendChild(tdTok);
+      BPS.forEach(function(bp, bpi) {
+        var td = document.createElement('td');
+        td.className = bpi === 1 ? 'ref-bp-hi' : 'ref-bp';
+        td.textContent = (data.size[key] && data.size[key][bp] !== undefined) ? data.size[key][bp] : '—';
+        tr.appendChild(td);
+      });
+      var tdUse = document.createElement('td');
+      tdUse.className = 'ref-use';
+      tdUse.textContent = SIZE_USE_MAP[key] || '';
+      tr.appendChild(tdUse);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function buildRefRolesTable() {
+    var tbody = document.getElementById('ref-roles-rows');
+    tbody.innerHTML = '';
+    REF_ROLES.forEach(function(r) {
+      var tr = document.createElement('tr');
+      var tdRole = document.createElement('td');
+      tdRole.className = 'ref-role'; tdRole.textContent = r.role;
+      var tdTok = document.createElement('td');
+      tdTok.innerHTML = '<span class="ref-tok">' + r.token + '</span>';
+      var tdWt = document.createElement('td');
+      tdWt.className = 'ref-wt'; tdWt.textContent = r.weight;
+      var tdUse = document.createElement('td');
+      tdUse.className = 'ref-use'; tdUse.textContent = r.use;
+      tr.appendChild(tdRole); tr.appendChild(tdTok); tr.appendChild(tdWt); tr.appendChild(tdUse);
+      tbody.appendChild(tr);
+    });
+  }
+
   // ─── Init ─────────────────────────────────────────────────────────
   buildTokenRows('size-rows', SIZE_KEYS, 'size', false);
   buildTokenRows('lh-rows',   LH_KEYS,   'lh',   false);
   buildTokenRows('ls-rows',   LS_KEYS,   'ls',   true);
+  buildRefRolesTable();
 </script>
 </body>
 </html>

@@ -9,8 +9,7 @@ var WEIGHT_MAP      = { 400: 'Regular', 500: 'Bold', 600: 'Bold' };
 
 // ─── Default token values (immutable — dùng để Reset) ────────────────────────
 var DEFAULT_SIZE = {
-  '2xs':  { '1280': 10, '1440': 10, '1920': 11 },
-  'xs':   { '1280': 11, '1440': 11, '1920': 12 },
+  'xs':   { '1280': 10, '1440': 11, '1920': 12 },
   'sm':   { '1280': 11, '1440': 12, '1920': 13 },
   'base': { '1280': 13, '1440': 14, '1920': 16 },
   'md':   { '1280': 14, '1440': 15, '1920': 17 },
@@ -19,7 +18,6 @@ var DEFAULT_SIZE = {
   '2xl':  { '1280': 22, '1440': 24, '1920': 28 },
 };
 var DEFAULT_LH = {
-  '2xs':  { '1280': 16, '1440': 16, '1920': 16 },
   'xs':   { '1280': 16, '1440': 16, '1920': 18 },
   'sm':   { '1280': 16, '1440': 18, '1920': 20 },
   'base': { '1280': 20, '1440': 22, '1920': 24 },
@@ -42,8 +40,8 @@ var LS_TOKENS   = {};
 
 // SUFFIX_TO_LS: mối quan hệ suffix→ls-key, không phải giá trị số → giữ hardcoded
 var SUFFIX_TO_LS = {
-  '2xs': 'letter-spacing/0', 'xs':   'letter-spacing/0',
-  'sm':  'letter-spacing/0', 'base': 'letter-spacing/0',
+  'xs':  'letter-spacing/0', 'sm':   'letter-spacing/0',
+  'base': 'letter-spacing/0',
   'md':  'letter-spacing/0', 'lg':   'letter-spacing/0',
   'xl':  'letter-spacing/tight', '2xl': 'letter-spacing/tighter',
 };
@@ -62,7 +60,7 @@ function getDefaultTokenData() {
 
 // Áp dụng token data vào runtime variables + rebuild các bảng derived
 function applyTokenData(data) {
-  var sz = ['2xs','xs','sm','base','md','lg','xl','2xl'];
+  var sz = ['xs','sm','base','md','lg','xl','2xl'];
   var lk = ['0','tight','tighter'];
   var bps = ['1280','1440','1920'];
   SIZE_TOKENS = {}; LH_TOKENS = {}; LS_TOKENS = {};
