@@ -258,11 +258,18 @@
   #reset-btn { background: #f3f4f6; color: #374151; }
   #reset-btn:hover { background: #e5e7eb; }
   #export-btn {
-    width: 100%; padding: 7px; border: 1px solid #0d9488;
+    flex: 1; padding: 7px; border: 1px solid #0d9488;
     background: #f0fdfa; color: #0d9488; border-radius: 7px;
     font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.15s;
   }
   #export-btn:hover { background: #ccfbf1; }
+  #demo-btn {
+    flex: 1; padding: 7px; border: 1px solid #7c3aed;
+    background: #faf5ff; color: #7c3aed; border-radius: 7px;
+    font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.15s;
+  }
+  #demo-btn:hover { background: #ede9fe; }
+  #demo-btn:disabled { background: #f3f0ff; color: #a78bfa; cursor: default; }
   #tok-status {
     flex-shrink: 0; padding: 0 16px 10px; font-size: 11px; color: #666;
     text-align: center; min-height: 14px; line-height: 1.5;
@@ -434,7 +441,10 @@
       <button id="apply-btn" onclick="applyTokens()">Apply ngay</button>
       <button id="reset-btn" onclick="resetTokens()">Reset về default</button>
     </div>
-    <button id="export-btn" onclick="exportCSS()">Export CSS</button>
+    <div class="tok-footer-row">
+      <button id="export-btn" onclick="exportCSS()">Export CSS</button>
+      <button id="demo-btn" onclick="createDemoPage()">Tạo trang Demo</button>
+    </div>
   </div>
   <div id="tok-status"></div>
 
@@ -982,6 +992,16 @@
       abtn2.disabled = false; abtn2.textContent = 'Apply ngay';
       setTokStatus(msg.text, 'error');
     }
+    if (msg.type === 'demoCreated') {
+      var dbtn = document.getElementById('demo-btn');
+      dbtn.disabled = false; dbtn.textContent = 'Tạo trang Demo';
+      setTokStatus('✓ ' + msg.text, 'success');
+    }
+    if (msg.type === 'demoError') {
+      var dbtn2 = document.getElementById('demo-btn');
+      dbtn2.disabled = false; dbtn2.textContent = 'Tạo trang Demo';
+      setTokStatus(msg.text, 'error');
+    }
   };
 
   // ─── Export CSS ───────────────────────────────────────────────────
@@ -1117,6 +1137,15 @@
       tr.appendChild(tdRole); tr.appendChild(tdTok); tr.appendChild(tdWt); tr.appendChild(tdUse);
       tbody.appendChild(tr);
     });
+  }
+
+  // ─── Demo page ───────────────────────────────────────────────────
+  function createDemoPage() {
+    var btn = document.getElementById('demo-btn');
+    btn.disabled = true; btn.textContent = 'Đang tạo...';
+    setTokStatus('');
+    var gn = document.getElementById('group-name').value.trim() || 'FAN Font';
+    parent.postMessage({ pluginMessage: { type: 'create-demo-page', groupName: gn } }, '*');
   }
 
   // ─── Init ─────────────────────────────────────────────────────────

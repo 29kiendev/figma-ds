@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Figma plugin ("Typography DS") that automates typography token management for a design system across 3 responsive breakpoints (1280 / 1440 / 1920px). The plugin provides:
 - **Tab "Chuẩn hoá"**: one-click creates Figma variables, upserts 46 named text styles, assigns those styles to all selected frames.
 - **Tab "Tokens"**: edit token values (font size / line height / letter spacing) and style definitions (name, token, weight, lh%, ls%, textCase, mono) inline, then Apply to Figma. Reset restores hardcoded defaults. Data persists in the Figma file via `figma.root.setPluginData`.
+- **Tạo trang Demo**: creates 3 frames (`Demo 1280 / 1440 / 1920`) side by side on the current Figma page — 9 sections covering all 46 text roles, each text node bound to `textStyleId`, each frame set to the matching variable mode.
 
 There are also Node.js scripts (`create-variables.js`, `read-file.js`, `apply-styles.js`) for REST API operations.
 
@@ -121,8 +122,7 @@ Disambiguation when multiple styles share the same size+fontStyle:
 
 | Token | Sizes (1280/1440/1920) | Line heights  | Letter spacing         |
 |-------|------------------------|---------------|------------------------|
-| 2xs   | 10/10/11               | 16/16/16      | 0                      |
-| xs    | 11/11/12               | 16/16/18      | 0                      |
+| xs    | 10/11/12               | 16/16/18      | 0                      |
 | sm    | 11/12/13               | 16/18/20      | 0                      |
 | base  | 13/14/16               | 20/22/24      | 0                      |
 | md    | 14/15/17               | 20/22/26      | 0                      |
@@ -159,9 +159,25 @@ Result is copied to clipboard via `navigator.clipboard.writeText()` with `execCo
 
 ---
 
+### Duplicate frames (`duplicateFrames`)
+
+- Clones each selected frame to 1440/1920 breakpoints (all selected frames, not just the first).
+- Clone names: `Z-1440`, `Z-1920` (source frame name + breakpoint suffix).
+- If existing clone with that name is found, it is removed before re-cloning.
+- If the variable collection exists but is missing modes (e.g. file A created it with only 1280), `setupVariables` now auto-adds missing modes instead of throwing "Thiếu mode 1440".
+
+### Typography Demo (`create-demo-page`)
+
+- Sends `groupName` from the shared input in the plugin UI.
+- Builds 3 frames (`Demo 1280 / 1440 / 1920`) with 9 sections mirroring `typography-roles-demo.html`.
+- All auto layout uses **hug** sizing except the Table section (which uses STRETCH rows for fixed column widths).
+- Section cards and divider rectangles use `layoutAlign = 'STRETCH'` to fill the BP frame width.
+- Each text node gets `textStyleId` from local styles matching `groupName + '/' + def.name`.
+- Each BP frame gets `setExplicitVariableModeForCollection` for the correct breakpoint.
+
 ## Known limitations
 
 - `Body/Secondary`, `Input/Placeholder`, `Label/Disabled` — identical typography to Default variants, differ only by color. Cannot be auto-assigned; must be set manually.
 - `WEIGHT_MAP = { 400: 'Regular', 500: 'Bold', 600: 'Bold' }` because Arial has no Medium/SemiBold. If font changes, update `WEIGHT_MAP` and `FONT_MONO` at the top of `code.js`.
-- Duplicate frame + Guidelines only apply to the **first** selected frame when multiple frames are selected.
+- Guidelines only apply to the **first** selected frame when multiple frames are selected.
 - Deleting a style in Tab 2 and pressing Apply will remove that text style from Figma — any nodes referencing it lose their style assignment.

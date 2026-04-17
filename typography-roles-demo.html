@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typography Roles — Design System Demo</title>
+<style>
+/* ── Token sizes per breakpoint (set by JS) ── */
+:root {
+  --xs:   11px; --sm: 11px; --base: 13px;
+  --md:   14px; --lg: 16px; --xl:   18px; --2xl: 22px;
+
+  --c-bg:        #F7F6F3;
+  --c-surface:   #FFFFFF;
+  --c-s2:        #F3F2EF;
+  --c-s3:        #ECEAE5;
+  --c-border:    #E2E0DA;
+  --c-border-md: #C8C6BF;
+  --c-t1: #1A1916; --c-t2: #4A4843;
+  --c-t3: #7A7870; --c-t4: #A8A69F;
+  --c-accent:    #2D6BE4;
+  --c-accent-bg: #EBF0FD;
+  --c-success:   #1C7A4E; --c-success-bg: #E8F5EE;
+  --c-warn:      #96580A; --c-warn-bg:    #FEF3E2;
+  --c-danger:    #D94040; --c-danger-bg:  #FEF2F2;
+
+  --r-sm: 4px; --r-md: 6px; --r-lg: 10px; --r-xl: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial;
+  background: var(--c-bg);
+  color: var(--c-t1);
+  padding-top: 40px;
+  overflow-x: hidden;
+}
+
+/* ── Viewport bar ── */
+.vp-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: #111; color: #fff;
+  font-family: Arial; font-size: 11px;
+  padding: 6px 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.vp-sep { opacity: 0.2; }
+.vp-val { color: #9EEAFF; font-weight: 500; }
+.vp-btn {
+  font-family: Arial; font-size: 11px; font-weight: 500;
+  padding: 3px 10px; border-radius: 4px;
+  border: 1px solid #444; background: transparent; color: #aaa;
+  cursor: pointer; transition: all 0.15s; line-height: 1.4;
+}
+.vp-btn:hover  { border-color: #FFD166; color: #FFD166; }
+.vp-btn.active { background: #FFD166; color: #111; border-color: #FFD166; font-weight: 700; }
+
+/* ── Scaler ── */
+#vp-scaler { transform-origin: top left; transition: transform 0.25s ease; }
+
+/* ── Page wrap ── */
+.pw { max-width: 1560px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* ── Page title ── */
+.ds-title {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--c-accent);
+  margin-bottom: 6px;
+}
+.ds-headline {
+  font-size: 28px; font-weight: 600; letter-spacing: -0.025em;
+  color: var(--c-t1); margin-bottom: 8px;
+}
+.ds-sub {
+  font-size: 14px; color: var(--c-t3); margin-bottom: 40px; line-height: 1.6;
+}
+
+/* ── Section ── */
+.sec {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: var(--r-xl); padding: 28px 32px;
+  margin-bottom: 16px;
+}
+.sec-hd {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--c-t3);
+  padding-bottom: 12px; margin-bottom: 20px;
+  border-bottom: 1px solid var(--c-border);
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-hd-count {
+  background: var(--c-s2); color: var(--c-t3);
+  border-radius: 99px; padding: 1px 8px; font-size: 10px;
+}
+
+/* ── Row: text + label ── */
+.row {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--c-border);
+  flex-wrap: wrap;
+}
+.row:last-child { border-bottom: none; }
+
+/* The naming label */
+.nm {
+  font-family: Arial;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  color: var(--c-accent) !important;
+  background: var(--c-accent-bg);
+  border-radius: 3px; padding: 1px 7px;
+  white-space: nowrap; line-height: 1.7;
+  flex-shrink: 0; vertical-align: middle;
+  letter-spacing: 0;
+}
+.nm.nm-green  { color: var(--c-success) !important; background: var(--c-success-bg); }
+.nm.nm-red    { color: var(--c-danger)  !important; background: var(--c-danger-bg); }
+.nm.nm-orange { color: var(--c-warn)    !important; background: var(--c-warn-bg); }
+
+/* ── Grid layouts ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+
+/* ── Table ── */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl thead tr { background: var(--c-s2); border-bottom: 1.5px solid var(--c-border-md); }
+.tbl thead th {
+  text-align: left; padding: 8px 12px;
+  font-size: var(--xs); font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase; color: var(--c-t3);
+  white-space: nowrap;
+}
+.tbl tbody tr { border-bottom: 1px solid var(--c-border); }
+.tbl tbody tr:hover { background: var(--c-s2); }
+.tbl tbody td { padding: 8px 12px; vertical-align: middle; }
+.td-sub { display: block; font-size: var(--xs); color: var(--c-t3); margin-top: 1px; }
+
+/* ── Form ── */
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+input[type=text], select, textarea {
+  font-family: Arial;
+  font-size: var(--base); color: var(--c-t1);
+  background: var(--c-surface); border: 1px solid var(--c-border-md);
+  border-radius: var(--r-md); padding: 7px 12px; width: 100%;
+  outline: none; line-height: 1.5; transition: border-color .15s, box-shadow .15s;
+}
+input::placeholder { color: var(--c-t4); }
+input:focus { border-color: var(--c-accent); box-shadow: 0 0 0 3px rgba(45,107,228,.12); }
+input.err { border-color: var(--c-danger); }
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%23A8A69F' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer;
+}
+textarea { resize: vertical; min-height: 72px; }
+.check-row { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; }
+.check-row input { width: 16px; height: 16px; min-width: 16px; accent-color: var(--c-accent); margin-top: 2px; }
+.toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track { position: absolute; inset: 0; background: var(--c-border-md); border-radius: 99px; cursor: pointer; transition: background .2s; }
+.toggle input:checked + .toggle-track { background: var(--c-accent); }
+.toggle-track::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
+.toggle input:checked + .toggle-track::before { transform: translateX(16px); }
+
+/* ── Buttons ── */
+.btn {
+  font-family: Arial; font-weight: 500; line-height: 1;
+  border: 1px solid transparent; border-radius: var(--r-md);
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.btn-primary  { background: var(--c-accent);  color: #fff; border-color: var(--c-accent); }
+.btn-success  { background: var(--c-success); color: #fff; border-color: var(--c-success); }
+.btn-danger   { background: var(--c-danger-bg); color: var(--c-danger); border-color: #FECACA; }
+.btn-secondary{ background: var(--c-surface); color: var(--c-t1); border-color: var(--c-border-md); }
+.btn-ghost    { background: transparent; color: var(--c-t2); border-color: transparent; }
+.btn-outline  { background: transparent; color: var(--c-accent); border-color: var(--c-accent); }
+.btn-lg  { font-size: var(--md);   padding: 10px 20px; }
+.btn-md  { font-size: var(--sm);   padding: 7px 16px; }
+.btn-sm  { font-size: var(--xs);   padding: 5px 12px; }
+
+/* ── Badges / Tags ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: var(--xs); font-weight: 500;
+  padding: 3px 10px; border-radius: 99px; line-height: 1.5;
+}
+.badge-success { background: var(--c-success-bg); color: var(--c-success); }
+.badge-warn    { background: var(--c-warn-bg);    color: var(--c-warn); }
+.badge-danger  { background: var(--c-danger-bg);  color: var(--c-danger); }
+.badge-info    { background: var(--c-accent-bg);  color: var(--c-accent); }
+.badge-neutral { background: var(--c-s2); color: var(--c-t2); border: 1px solid var(--c-border); }
+.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-success { background: var(--c-success); }
+.dot-warn    { background: var(--c-warn); }
+.dot-danger  { background: var(--c-danger); }
+.dot-info    { background: var(--c-accent); }
+
+.tag {
+  display: inline-block; font-size: var(--xs); font-weight: 500;
+  padding: 3px 10px; border-radius: var(--r-sm); line-height: 1.5;
+  border: 1px solid var(--c-border-md); color: var(--c-t2); background: var(--c-surface);
+}
+.tag.active { background: var(--c-accent-bg); border-color: var(--c-accent); color: var(--c-accent); }
+
+/* ── Nav / Breadcrumb ── */
+.nav-mock { background: var(--c-s2); border-radius: var(--r-md); padding: 12px 16px; display: flex; flex-direction: column; gap: 2px; }
+.nav-section-hd {
+  font-size: var(--xs); font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-t3);
+  padding: 10px 0 4px; margin-top: 4px;
+}
+.nav-section-hd:first-child { padding-top: 0; margin-top: 0; }
+.nav-item { font-size: var(--sm); font-weight: 400; color: var(--c-t2); padding: 5px 8px; border-radius: var(--r-sm); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.nav-item.active { font-weight: 600; color: var(--c-accent); background: var(--c-accent-bg); }
+.breadcrumb { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.breadcrumb a { font-size: var(--sm); color: var(--c-accent); text-decoration: none; }
+.breadcrumb span { font-size: var(--sm); color: var(--c-t4); }
+.breadcrumb .cur { font-size: var(--sm); font-weight: 500; color: var(--c-t1); }
+
+/* ── Notification ── */
+.notif { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--c-border); }
+.notif:last-child { border-bottom: none; }
+.notif-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+
+/* ── Approval block ── */
+.approval-card {
+  background: var(--c-s2); border-radius: var(--r-lg);
+  padding: 16px; border: 1px solid var(--c-border);
+}
+.approval-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--c-accent-bg); display: flex; align-items: center; justify-content: center;
+  font-size: var(--sm); font-weight: 600; color: var(--c-accent); flex-shrink: 0;
+}
+.timeline-line { position: relative; padding-left: 24px; }
+.timeline-line::before { content: ''; position: absolute; left: 7px; top: 8px; bottom: 0; width: 2px; background: var(--c-border); }
+.timeline-dot { position: absolute; left: 0; top: 4px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--c-accent); background: var(--c-surface); }
+.timeline-item { position: relative; padding: 0 0 20px 0; }
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item:last-child .timeline-line::before { display: none; }
+
+/* ── Code ref ── */
+.code-ref {
+  font-family: Arial;
+  font-size: var(--xs); font-weight: 500;
+  background: var(--c-s2); border: 1px solid var(--c-border);
+  border-radius: var(--r-sm); padding: 1px 6px; color: var(--c-t2);
+}
+
+/* ── Stat card ── */
+.stat-card { background: var(--c-s2); border-radius: var(--r-md); padding: 14px 18px; }
+
+/* ── Toast ── */
+.toast {
+  background: #1A1916; color: #fff; border-radius: var(--r-md);
+  padding: 10px 16px; display: flex; align-items: center; gap: 10px;
+  max-width: 360px;
+}
+.tooltip-demo { position: relative; display: inline-block; }
+.tooltip-box {
+  background: #1A1916; color: #fff;
+  font-size: var(--xs); padding: 5px 10px;
+  border-radius: var(--r-sm); white-space: nowrap;
+  display: inline-block;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Viewport Bar ── -->
+<div class="vp-bar">
+  <span style="color:#555;font-size:10px;letter-spacing:.06em;text-transform:uppercase">Breakpoint</span>
+  <div style="display:flex;gap:4px">
+    <button class="vp-btn" id="btn-1280" onclick="setVP(1280)">1280</button>
+    <button class="vp-btn" id="btn-1440" onclick="setVP(1440)">1440</button>
+    <button class="vp-btn" id="btn-1920" onclick="setVP(1920)">1920</button>
+  </div>
+  <span class="vp-sep">|</span>
+  <span style="color:#666">base</span><span class="vp-val" id="vp-base">—</span>
+  <span class="vp-sep">|</span>
+  <span style="color:#666">sm</span><span class="vp-val" id="vp-sm">—</span>
+  <span class="vp-sep">|</span>
+  <span style="color:#666">xl</span><span class="vp-val" id="vp-xl">—</span>
+  <span class="vp-sep">|</span>
+  <span style="color:#666">scale</span><span class="vp-val" id="vp-scale">—</span>
+  <span style="color:#444;margin-left:auto;font-size:10px">Stepped breakpoints · Fluent aligned · 34 roles</span>
+</div>
+
+<div id="vp-scaler">
+<div class="pw">
+
+  <div class="ds-title">Design System</div>
+  <div class="ds-headline">Typography Roles</div>
+  <div class="ds-sub">34 roles · 6 token sizes · 3 breakpoints — mỗi text hiển thị kèm tên role</div>
+
+  <!-- ══════════════════════════════════════
+       1. PAGE LEVEL
+  ═══════════════════════════════════════ -->
+  <div class="sec">
+    <div class="sec-hd">Page Level <span class="sec-hd-count">4 roles</span></div>
+
+    <div class="row">
+      <span style="font-size:var(--2xl);font-weight:600;line-height:1.3;letter-spacing:-.025em">Tờ trình xin phê duyệt ngân sách Q2/2026</span>
+      <span class="nm">Display</span>
+    </div>
+    <div class="row">
+      <span style="font-size:var(--xl);font-weight:600;line-height:1.3;letter-spacing:-.02em">Thông tin chung</span>
+      <span class="nm">Title</span>
+    </div>
+    <div class="row">
+      <span style="font-size:var(--lg);font-weight:500;line-height:1.4">Danh sách đính kèm</span>
+      <span class="nm">Subtitle</span>
+    </div>
+    <div class="row">
+      <span style="font-size:var(--xs);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--c-t3)">Thông tin người trình</span>
+      <span class="nm">Overline</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       2. BODY & READING
+  ═══════════════════════════════════════ -->
+  <div class="sec">
+    <div class="sec-hd">Body &amp; Reading <span class="sec-hd-count">4 roles</span></div>
+
+    <div class="row">
+      <span style="font-size:var(--md);font-weight:400;line-height:1.6;color:var(--c-t2)">Tờ trình đề xuất phê duyệt khoản ngân sách bổ sung cho quý 2, nhằm đáp ứng nhu cầu mở rộng hạ tầng CNTT theo kế hoạch năm 2026.</span>
+      <span class="nm">Lead</span>
+    </div>
+    <div class="row">
+      <span style="font-size:var(--base);font-weight:400;line-height:1.7;color:var(--c-t2)">Căn cứ theo nghị quyết số 12/NQ-HĐQT ngày 01/01/2026 về kế hoạch đầu tư năm 2026, bộ phận CNTT đề xuất bổ sung ngân sách để triển khai hệ thống quản lý quy trình nội bộ.</span>
+      <span class="nm">Body/Default</span>
+    </div>
+    <div class="row">
+      <span style="font-size:var(--base);font-weight:400;line-height:1.7;color:var(--c-t2)">Tổng kinh phí đề xuất: <strong style="font-weight:600;color:var(--c-t1)">₫2,450,000,000</strong> — đã bao gồm chi phí triển khai và đào tạo.</span>
+      <span class="nm">Body/Default</span>
+      <span class="nm" style="margin-left:0">Body/Strong <span style="opacity:.6">(chữ in đậm)</span></span>
+    </div>
+    <div class="row">
+      <span style="font-size:var(--base);font-weight:400;line-height:1.7;color:var(--c-t3)">Tài liệu này chỉ mang tính tham khảo nội bộ, không có giá trị pháp lý khi chưa có chữ ký phê duyệt.</span>
+      <span class="nm">Body/Secondary</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       3. FORM
+  ═══════════════════════════════════════ -->
+  <div class="sec">
+    <div class="sec-hd">Form <span class="sec-hd-count">8 roles</span></div>
+    <div class="grid-2">
+
+      <div class="form-group">
+        <label style="font-size:var(--sm);font-weight:500;color:var(--c-t2)">
+          Tên tờ trình <span style="color:var(--c-danger)">*</span>
+          <span class="nm">Label/Required</span>
+        </label>
+        <input type="text" value="Đề xuất ngân sách Q2/2026">
+        <span style="font-size:var(--xs);color:var(--c-t3)">
+          Tên sẽ hiển thị trong danh sách tờ trình
+          <span class="nm">Helper/Default</span>
+        </span>
+        <span style="font-size:var(--xs);color:var(--c-t3);font-style:italic;opacity:.7">Input value → <span class="nm" style="margin-left:4px">Input/Value</span></span>
+      </div>
+
+      <div class="form-group">
+        <label style="font-size:var(--sm);font-weight:500;color:var(--c-t2)">
+          Phòng ban <span style="color:var(--c-danger)">*</span>
+          <span class="nm">Label/Required</span>
+        </label>
+        <select>
+          <option value="" disabled selected>-- Chọn phòng ban --</option>
+          <option>Phòng CNTT</option>
+          <option>Phòng Tài chính</option>
+        </select>
+        <span style="font-size:var(--xs);color:var(--c-t3);font-style:italic;opacity:.7">Placeholder → <span class="nm" style="margin-left:4px">Input/Placeholder</span></span>
+      </div>
+
+      <div class="form-group">
+        <label style="font-size:var(--sm);font-weight:500;color:var(--c-t4)">
+          Mã tham chiếu
+          <span class="nm">Label/Disabled</span>
+        </label>
+        <input type="text" value="REF-2026-04-0291" style="background:var(--c-s2);color:var(--c-t4)">
+      </div>
+
+      <div class="form-group">
+        <label style="font-size:var(--sm);font-weight:500;color:var(--c-t2)">
+          Email người trình
+          <span class="nm">Label/Default</span>
+        </label>
+        <input type="text" class="err" value="nguyen.van.an@email">
+        <span style="font-size:var(--xs);color:var(--c-danger)">
+          Email không đúng định dạng
+          <span class="nm nm-red">Helper/Error</span>
+        </span>
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1">
+        <label style="font-size:var(--sm);font-weight:500;color:var(--c-t2)">
+          Nội dung đề xuất
+          <span class="nm">Label/Default</span>
+        </label>
+        <textarea>Đề xuất bổ sung ngân sách ₫2,450,000,000 để triển khai hệ thống quản lý quy trình nội bộ, bao gồm phần mềm, hạ tầng và đào tạo nhân sự.</textarea>
+        <span style="font-size:var(--xs);color:var(--c-success)">
+          Nội dung hợp lệ — đã lưu nháp
+          <span class="nm nm-green">Helper/Success</span>
+        </span>
+      </div>
+
+      <div style="grid-column:1/-1">
+        <div style="font-size:var(--sm);font-weight:500;color:var(--c-t2);margin-bottom:8px">Checkbox &amp; Toggle</div>
+        <div style="display:flex;gap:32px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="check-row">
+              <input type="checkbox" checked>
+              <span style="font-size:var(--base);color:var(--c-t1)">Gửi thông báo qua email <span class="nm">Input/Value</span></span>
+            </div>
+            <div class="check-row">
+              <input type="checkbox">
+              <span style="font-size:var(--base);color:var(--c-t1)">Đính kèm tài liệu hỗ trợ</span>
+            </div>
+            <div class="check-row">
+              <input type="radio" name="r1" checked>
+              <span style="font-size:var(--base);color:var(--c-t1)">Ưu tiên cao</span>
+            </div>
+            <div class="check-row">
+              <input type="radio" name="r1">
+              <span style="font-size:var(--base);color:var(--c-t1)">Ưu tiên thường</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+              <span style="font-size:var(--base);color:var(--c-t1)">Yêu cầu ký số <span class="nm">Input/Value</span></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <label class="toggle"><input type="checkbox"><div class="toggle-track"></div></label>
+              <span style="font-size:var(--base);color:var(--c-t1)">Cho phép uỷ quyền ký</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       4. TABLE
+  ═══════════════════════════════════════ -->
+  <div class="sec">
+    <div class="sec-hd">Table <span class="sec-hd-count">6 roles</span></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <span style="font-size:var(--xs);color:var(--c-t3)">th: <span class="nm">Table/Header</span></span>
+      <span style="font-size:var(--xs);color:var(--c-t3)">td: <span class="nm">Table/Cell</span></span>
+      <span style="font-size:var(--xs);color:var(--c-t3)">td bold: <span class="nm">Table/Cell-Bold</span></span>
+      <span style="font-size:var(--xs);color:var(--c-t3)">dòng phụ: <span class="nm">Table/Cell-Sub</span></span>
+      <span style="font-size:var(--xs);color:var(--c-t3)">mã số: <span class="nm">Table/Cell-Mono</span></span>
+      <span style="font-size:var(--xs);color:var(--c-t3)">footer: <span class="nm">Table/Footer</span></span>
+    </div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Mã tờ trình</th>
+          <th>Người trình</th>
+          <th>Nội dung</th>
+          <th>Ngày tạo</th>
+          <th style="text-align:right">Giá trị</th>
+          <th>Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span style="font-family: Arial;font-size:var(--xs);color:var(--c-t2)">TT-2026-0291</span></td>
+          <td>
+            <span style="font-size:var(--sm);font-weight:600;display:block">Nguyễn Văn An</span>
+            <span class="td-sub">Phòng CNTT · Trưởng phòng</span>
+          </td>
+          <td>
+            <span style="font-size:var(--sm);display:block">Ngân sách Q2/2026</span>
+            <span class="td-sub">Hạ tầng &amp; phần mềm</span>
+          </td>
+          <td>
+            <span style="font-family: Arial;font-size:var(--xs);color:var(--c-t2);display:block">15/04/2026</span>
+            <span class="td-sub">09:42 SA</span>
+          </td>
+          <td style="text-align:right"><span style="font-size:var(--sm);font-weight:600">₫2,450,000,000</span></td>
+          <td><span class="badge badge-warn"><span class="dot dot-warn"></span>Chờ duyệt</span></td>
+        </tr>
+        <tr>
+          <td><span style="font-family: Arial;font-size:var(--xs);color:var(--c-t2)">TT-2026-0290</span></td>
+          <td>
+            <span style="font-size:var(--sm);font-weight:600;display:block">Lê Thị Bích Ngọc</span>
+            <span class="td-sub">Phòng Tài chính · Kế toán trưởng</span>
+          </td>
+          <td>
+            <span style="font-size:var(--sm);display:block">Mua sắm thiết bị văn phòng</span>
+            <span class="td-sub">Máy in, màn hình</span>
+          </td>
+          <td>
+            <span style="font-family: Arial;font-size:var(--xs);color:var(--c-t2);display:block">14/04/2026</span>
+            <span class="td-sub">14:20 CH</span>
+          </td>
+          <td style="text-align:right"><span style="font-size:var(--sm);font-weight:600">₫185,000,000</span></td>
+          <td><span class="badge badge-success"><span class="dot dot-success"></span>Đã duyệt</span></td>
+        </tr>
+        <tr>
+          <td><span style="font-family: Arial;font-size:var(--xs);color:var(--c-t2)">TT-2026-0289</span></td>
+          <td>
+            <span style="font-size:var(--sm);font-weight:600;display:block">Trần Minh Tuấn</span>
+            <span class="td-sub">Phòng Nhân sự · Chuyên viên</span>
+          </td>
+          <td>
+            <span style="font-size:var(--sm);display:block">Đào tạo nhân viên mới</span>
+            <span class="td-sub">Khoá học nội bộ Q2</span>
+          </td>
+          <td>
+            <span style="font-family: Arial;font-size:var(--xs);color:var(--c-t2);display:block">12/04/2026</span>
+            <span class="td-sub">10:05 SA</span>
+          </td>
+          <td style="text-align:right"><span style="font-size:var(--sm);font-weight:600">₫42,000,000</span></td>
+          <td><span class="badge badge-danger"><span class="dot dot-danger"></span>Từ chối</span></td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr style="background:var(--c-s2)">
+          <td colspan="4" style="font-size:var(--xs);font-weight:500;color:var(--c-t3);padding:8px 12px">
+            Tổng 3 tờ trình — hiển thị 1–3 / 48 kết quả
+            <span class="nm">Table/Footer</span>
+          </td>
+          <td style="text-align:right;font-size:var(--xs);font-weight:600;color:var(--c-t1);padding:8px 12px">₫2,677,000,000</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       5. BUTTONS
+  ═══════════════════════════════════════ -->
+  <div class="sec">
+    <div class="sec-hd">Button <span class="sec-hd-count">3 roles</span></div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-success btn-lg">Phê duyệt</button>
+        <button class="btn btn-danger btn-lg">Từ chối</button>
+        <button class="btn btn-primary btn-lg">Gửi tờ trình</button>
+        <span class="nm">Button/Large</span>
+        <span style="font-size:var(--xs);color:var(--c-t3)">→ font-size: md</span>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-md">Lưu nháp</button>
+        <button class="btn btn-outline btn-md">Xem trước</button>
+        <button class="btn btn-ghost btn-md">Huỷ</button>
+        <button class="btn btn-secondary btn-md">Yêu cầu bổ sung</button>
+        <span class="nm">Button/Default</span>
+        <span style="font-size:var(--xs);color:var(--c-t3)">→ font-size: sm</span>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm">Xuất PDF</button>
+        <button class="btn btn-secondary btn-sm">In tờ trình</button>
+        <button class="btn btn-secondary btn-sm">Chia sẻ</button>
+        <button class="btn btn-ghost btn-sm">+ Thêm đính kèm</button>
+        <span class="nm">Button/Small</span>
+        <span style="font-size:var(--xs);color:var(--c-t3)">→ font-size: xs</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       6. BADGE & TAG
+  ═══════════════════════════════════════ -->
+  <div class="sec">
+    <div class="sec-hd">Badge &amp; Tag <span class="sec-hd-count">3 roles</span></div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="badge badge-success">Đã duyệt</span>
+        <span class="badge badge-warn">Chờ duyệt</span>
+        <span class="badge badge-danger">Từ chối</span>
+        <span class="badge badge-info">Đang xử lý</span>
+        <span class="badge badge-neutral">Nháp</span>
+        <span class="nm">Badge/Default</span>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="badge badge-success"><span class="dot dot-success"></span>Đã duyệt</span>
+        <span class="badge badge-warn"><span class="dot dot-warn"></span>Chờ duyệt</span>
+        <span class="badge badge-danger"><span class="dot dot-danger"></span>Từ chối</span>
+        <span class="badge badge-info"><span class="dot dot-info"></span>Đang xử lý</span>
+        <span class="nm">Badge/Dot</span>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="tag active">Tất cả</span>
+        <span class="tag">Chờ tôi duyệt</span>
+        <span class="tag">Tôi đã tạo</span>
+        <span class="tag">Đã hoàn tất</span>
+        <span class="tag">Khẩn cấp</span>
+        <span class="nm">Tag</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       7. NAVIGATION
+  ═══════════════════════════════════════ -->
+  <div class="sec">
+    <div class="sec-hd">Navigation <span class="sec-hd-count">5 roles</span></div>
+    <div class="grid-2">
+
+      <div>
+        <div style="font-size:var(--xs);color:var(--c-t3);margin-bottom:8px">Sidebar nav</div>
+        <div class="nav-mock">
+          <div class="nav-section-hd">Tờ trình <span class="nm">Nav/Section</span></div>
+          <div class="nav-item active">Danh sách tờ trình <span class="nm" style="margin-left:auto">Nav/Item-Active</span></div>
+          <div class="nav-item">Tạo tờ trình mới <span class="nm" style="margin-left:auto">Nav/Item</span></div>
+          <div class="nav-item">Chờ tôi phê duyệt</div>
+          <div class="nav-section-hd">Hệ thống</div>
+          <div class="nav-item">Cài đặt</div>
+          <div class="nav-item">Nhật ký hoạt động</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:var(--xs);color:var(--c-t3);margin-bottom:8px">Breadcrumb</div>
+        <div class="breadcrumb">
+          <a href="#">Trang chủ</a>
+          <span>/</span>
+          <a href="#">Tờ trình</a>
+          <span>/</span>
+          <a href="#">Phê duyệt ngân sách</a>
+          <span>/</span>
+          <span class="cur">TT-2026-0291</span>
+          <span class="nm">Breadcrumb · Breadcrumb/Current</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       8. NOTIFICATION & FEEDBACK
+  ═══════════════════════════════════════ -->
+  <div class="sec">
+    <div class="sec-hd">Notification &amp; Feedback <span class="sec-hd-count">5 roles</span></div>
+    <div class="grid-2">
+
+      <div>
+        <div style="font-size:var(--xs);color:var(--c-t3);margin-bottom:8px">Notification list</div>
+        <div class="notif">
+          <div class="notif-dot" style="background:var(--c-accent)"></div>
+          <div>
+            <div style="font-size:var(--sm);font-weight:500;color:var(--c-t1);margin-bottom:2px">
+              TT-2026-0291 vừa được phê duyệt
+              <span class="nm">Notif/Title</span>
+            </div>
+            <div style="font-size:var(--sm);color:var(--c-t2);line-height:1.5;margin-bottom:2px">
+              Giám đốc Phạm Minh Châu đã ký duyệt tờ trình ngân sách Q2.
+              <span class="nm">Notif/Body</span>
+            </div>
+            <div style="font-size:var(--xs);color:var(--c-t4)">
+              5 phút trước · 09:42 15/04/2026
+              <span class="nm">Notif/Time</span>
+            </div>
+          </div>
+        </div>
+        <div class="notif">
+          <div class="notif-dot" style="background:var(--c-warn)"></div>
+          <div>
+            <div style="font-size:var(--sm);font-weight:500;color:var(--c-t1);margin-bottom:2px">Tờ trình yêu cầu bổ sung hồ sơ</div>
+            <div style="font-size:var(--sm);color:var(--c-t2);line-height:1.5;margin-bottom:2px">TT-2026-0288 cần đính kèm báo cáo tài chính Q1.</div>
+            <div style="font-size:var(--xs);color:var(--c-t4)">2 giờ trước</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div style="font-size:var(--xs);color:var(--c-t3);margin-bottom:8px">Toast</div>
+          <div class="toast">
+            <span style="font-size:var(--sm);color:#fff;line-height:1.5">
+              Tờ trình đã được gửi thành công
+              <span class="nm" style="background:rgba(255,255,255,.1);color:#9EEAFF">Toast/Message</span>
+            </span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:var(--xs);color:var(--c-t3);margin-bottom:8px">Tooltip</div>
+          <div class="tooltip-box">
+            Nhấn để xem lịch sử phê duyệt
+            <span class="nm" style="background:rgba(255,255,255,.1);color:#9EEAFF">Tooltip</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       9. ĐẶC THÙ TỜ TRÌNH
+  ═══════════════════════════════════════ -->
+  <div class="sec">
+    <div class="sec-hd">Đặc thù tờ trình phê duyệt <span class="sec-hd-count">8 roles</span></div>
+    <div class="grid-2">
+
+      <!-- Approval cards -->
+      <div>
+        <div style="font-size:var(--xs);color:var(--c-t3);margin-bottom:8px">Approval signers</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+
+          <div class="approval-card">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div class="approval-avatar">PC</div>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+                  <span style="font-size:var(--base);font-weight:600;color:var(--c-t1)">Phạm Minh Châu</span>
+                  <span class="nm">Approval/Name</span>
+                </div>
+                <div style="font-size:var(--sm);color:var(--c-t3);margin-bottom:6px">
+                  Giám đốc điều hành
+                  <span class="nm">Approval/Role</span>
+                </div>
+                <div style="font-size:var(--sm);font-weight:500;color:var(--c-success);margin-bottom:6px">
+                  ✓ Đã phê duyệt
+                  <span class="nm nm-green">Approval/Status</span>
+                </div>
+                <div style="font-size:var(--base);color:var(--c-t2);line-height:1.7;margin-bottom:4px">
+                  Đồng ý với đề xuất. Yêu cầu báo cáo tiến độ hàng tháng.
+                  <span class="nm">Approval/Comment</span>
+                </div>
+                <div style="font-family: Arial;font-size:var(--xs);color:var(--c-t4)">
+                  15/04/2026 · 09:42 SA
+                  <span class="nm">Approval/Date</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="approval-card">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div class="approval-avatar" style="background:var(--c-danger-bg);color:var(--c-danger)">TL</div>
+              <div style="flex:1">
+                <div style="font-size:var(--base);font-weight:600;color:var(--c-t1);margin-bottom:2px">Trần Văn Lâm</div>
+                <div style="font-size:var(--sm);color:var(--c-t3);margin-bottom:6px">Trưởng phòng Tài chính</div>
+                <div style="font-size:var(--sm);font-weight:500;color:var(--c-danger);margin-bottom:6px">✕ Từ chối</div>
+                <div style="font-size:var(--base);color:var(--c-t2);line-height:1.7;margin-bottom:4px">Ngân sách vượt quá hạn mức được phê duyệt trong kế hoạch năm. Đề nghị điều chỉnh xuống ≤₫2,000,000,000.</div>
+                <div style="font-family: Arial;font-size:var(--xs);color:var(--c-t4)">14/04/2026 · 16:30 CH</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Timeline + Code/Reference -->
+      <div>
+        <div style="font-size:var(--xs);color:var(--c-t3);margin-bottom:8px">Quy trình xử lý (Timeline)</div>
+        <div style="display:flex;flex-direction:column;gap:0;position:relative;padding-left:24px">
+          <div style="position:absolute;left:7px;top:8px;bottom:24px;width:2px;background:var(--c-border)"></div>
+
+          <div style="position:relative;padding-bottom:18px">
+            <div style="position:absolute;left:-24px;top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--c-success);background:var(--c-success);display:flex;align-items:center;justify-content:center">
+              <span style="color:#fff;font-size:9px">✓</span>
+            </div>
+            <div style="font-size:var(--sm);font-weight:500;color:var(--c-t1)">
+              Tạo tờ trình
+              <span class="nm">Timeline/Step</span>
+            </div>
+            <div style="font-size:var(--xs);color:var(--c-t3);margin-top:2px">
+              Nguyễn Văn An · 12/04/2026
+              <span class="nm">Timeline/Desc</span>
+            </div>
+          </div>
+
+          <div style="position:relative;padding-bottom:18px">
+            <div style="position:absolute;left:-24px;top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--c-success);background:var(--c-success);display:flex;align-items:center;justify-content:center">
+              <span style="color:#fff;font-size:9px">✓</span>
+            </div>
+            <div style="font-size:var(--sm);font-weight:500;color:var(--c-t1)">Trưởng phòng xét duyệt</div>
+            <div style="font-size:var(--xs);color:var(--c-t3);margin-top:2px">Lê Thị Ngọc · 13/04/2026</div>
+          </div>
+
+          <div style="position:relative;padding-bottom:18px">
+            <div style="position:absolute;left:-24px;top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--c-accent);background:var(--c-surface)"></div>
+            <div style="font-size:var(--sm);font-weight:500;color:var(--c-accent)">Giám đốc phê duyệt</div>
+            <div style="font-size:var(--xs);color:var(--c-t3);margin-top:2px">Đang chờ · Hạn 20/04/2026</div>
+          </div>
+
+          <div style="position:relative">
+            <div style="position:absolute;left:-24px;top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--c-border-md);background:var(--c-surface)"></div>
+            <div style="font-size:var(--sm);font-weight:400;color:var(--c-t3)">Hoàn tất &amp; lưu trữ</div>
+            <div style="font-size:var(--xs);color:var(--c-t4);margin-top:2px">Chưa bắt đầu</div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px">
+          <div style="font-size:var(--xs);color:var(--c-t3);margin-bottom:8px">Code/Reference</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+            <span class="code-ref">TT-2026-0291</span>
+            <span class="nm">Code/Reference</span>
+            <span class="code-ref">REF-CNTT-Q2-001</span>
+            <span class="code-ref">NQ-12/2026</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       TOKEN REFERENCE TABLE
+  ═══════════════════════════════════════ -->
+  <div class="sec" style="margin-top:16px">
+    <div class="sec-hd">Token Reference — tất cả breakpoints</div>
+    <table class="tbl" id="token-tbl">
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th>Role sử dụng</th>
+          <th id="th-1280">1280px</th>
+          <th id="th-1440">1440px</th>
+          <th id="th-1920">1920px</th>
+        </tr>
+      </thead>
+      <tbody id="token-tbody"></tbody>
+    </table>
+  </div>
+
+</div><!-- /pw -->
+</div><!-- /vp-scaler -->
+
+<script>
+const SIZES = {
+  1280: { xs:11, sm:11, base:13, md:14, lg:16, xl:18, '2xl':22 },
+  1440: { xs:11, sm:12, base:14, md:15, lg:16, xl:20, '2xl':24 },
+  1920: { xs:12, sm:13, base:16, md:17, lg:18, xl:22, '2xl':28 },
+};
+
+const TOKEN_ROLES = [
+  { token:'xs',   roles:'Table/Header, Caption, Helper/*, Overline, Badge, Tag, Button/Small, Notif/Time, Approval/Date, Timeline/Desc, Code/Reference' },
+  { token:'sm',   roles:'Label/*, Input/Placeholder, Table/Cell, Table/Cell-Sub, Table/Cell-Mono, Button/Default, Nav/Item, Breadcrumb, Notif/Title, Notif/Body, Approval/Role, Approval/Status, Timeline/Step, Toast/Message, Tooltip' },
+  { token:'base', roles:'Body/*, Input/Value, Check label, Toggle label, Approval/Name, Approval/Comment' },
+  { token:'md',   roles:'Lead, Button/Large' },
+  { token:'lg',   roles:'Subtitle' },
+  { token:'xl',   roles:'Title, Stat/Value' },
+  { token:'2xl',  roles:'Display' },
+];
+
+let currentVP = 1440;
+
+function setVP(vw) {
+  currentVP = vw;
+  const s = SIZES[vw];
+
+  /* Apply CSS vars */
+  Object.entries(s).forEach(([k,v]) => {
+    document.documentElement.style.setProperty('--' + k, v + 'px');
+  });
+
+  /* Scale */
+  const scaler = document.getElementById('vp-scaler');
+  const scale = window.innerWidth / vw;
+  scaler.style.width = vw + 'px';
+  scaler.style.transform = `scale(${scale})`;
+  scaler.style.transformOrigin = 'top left';
+  requestAnimationFrame(() => {
+    document.body.style.minHeight = (scaler.scrollHeight * scale + 40) + 'px';
+  });
+
+  /* Buttons */
+  document.querySelectorAll('.vp-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + vw).classList.add('active');
+
+  /* Info bar */
+  document.getElementById('vp-base').textContent  = s.base + 'px';
+  document.getElementById('vp-sm').textContent    = s.sm   + 'px';
+  document.getElementById('vp-xl').textContent    = s.xl   + 'px';
+  document.getElementById('vp-scale').textContent = (scale*100).toFixed(0) + '%';
+
+  /* Token table */
+  [1280,1440,1920].forEach(v => {
+    const th = document.getElementById('th-' + v);
+    th.style.color = v === vw ? 'var(--c-accent)' : '';
+    th.style.fontWeight = v === vw ? '700' : '500';
+  });
+
+  document.getElementById('token-tbody').innerHTML = TOKEN_ROLES.map(r => {
+    const s1=SIZES[1280][r.token], s2=SIZES[1440][r.token], s3=SIZES[1920][r.token];
+    return `<tr>
+      <td style="font-family: Arial;font-size:11px;color:var(--c-accent);white-space:nowrap">--${r.token}</td>
+      <td style="font-size:11px;color:var(--c-t3);line-height:1.6">${r.roles}</td>
+      <td style="font-family: Arial;font-size:11px;${vw===1280?'color:var(--c-t1);font-weight:700':'color:var(--c-t4)'}">${s1}px</td>
+      <td style="font-family: Arial;font-size:11px;${vw===1440?'color:var(--c-t1);font-weight:700':'color:var(--c-t4)'}">${s2}px</td>
+      <td style="font-family: Arial;font-size:11px;${vw===1920?'color:var(--c-t1);font-weight:700':'color:var(--c-t4)'}">${s3}px</td>
+    </tr>`;
+  }).join('');
+}
+
+window.addEventListener('resize', () => setVP(currentVP));
+setVP(1440);
+</script>
+</body>
+</html>
