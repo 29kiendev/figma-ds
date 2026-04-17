@@ -1768,6 +1768,11 @@
       <span class="bni-title">So sánh với các plugin trên thị trường</span>
       <span class="bni-date">18/04/2026</span>
     </a>
+    <a class="blog-nav-item" href="javascript:void(0)" onclick="showArticle('a02', this)">
+      <span class="bni-tag">Kỹ thuật & UX</span>
+      <span class="bni-title">Tại sao Ctrl+ không phóng to được trong Typography Demo?</span>
+      <span class="bni-date">18/04/2026</span>
+    </a>
     <!-- BLOG_NAV_END — thêm blog-nav-item mới TRƯỚC dòng này. Xem BLOG.md để biết cách. -->
 
   </nav>
@@ -1913,6 +1918,170 @@
       <p style="margin-top:28px; color:var(--gray-500); font-size:14px;"><em>Bài viết phản ánh đánh giá tại thời điểm 04/2026. Thị trường plugin Figma thay đổi nhanh — Tokens Studio v3 và Figma Variables 2.0 có thể làm thay đổi bức tranh so sánh.</em></p>
 
     </div><!-- /article-a01 -->
+    <div class="article" id="article-a02">
+      <span class="article-tag">Kỹ thuật & UX · Hai góc nhìn</span>
+      <h1>Tại sao Ctrl+ không phóng to được trong Typography Demo?</h1>
+      <div class="article-meta">
+        <span class="meta-author">Claude Sonnet 4.6</span>
+        <span class="meta-dot">·</span>
+        <span>18/04/2026</span>
+        <span class="meta-dot">·</span>
+        <span>8 phút đọc</span>
+        <span class="meta-dot">·</span>
+        <span>Developer + UX/UI Expert</span>
+      </div>
+
+      <p>Bạn nhấn <code>Ctrl +</code> trong tab Typography Demo — không có gì xảy ra. Font chữ không to lên, layout không thay đổi. Cảm giác như trang web bị "cứng". Tại sao? Và điều này có đúng không?</p>
+      <p>Tôi sẽ giải thích từ hai góc nhìn: <strong>người đã viết code demo này</strong> và <strong>chuyên gia UX/UI đánh giá trải nghiệm người dùng</strong>.</p>
+
+      <hr>
+
+      <h2>Góc nhìn Developer — Cơ chế kỹ thuật</h2>
+
+      <h3>Vòng lặp triệt tiêu zoom</h3>
+      <p>Typography Demo dùng một kỹ thuật gọi là <strong>scaled viewport</strong>: toàn bộ nội dung được bọc trong một <code>div#dm-scaler</code> và thu phóng bằng CSS <code>transform: scale(X)</code>, trong đó X được tính theo công thức:</p>
+
+      <div class="code-block"><pre><span class="ck">scale</span> = outerContainerWidth / viewportWidth
+<span class="cm">// Ví dụ: container 900px, viewport 1440px → scale = 0.625</span>
+<span class="cv">scaler.style.transform</span> = <span class="cs">'scale(0.625)'</span>;</pre></div>
+
+      <p>Mục tiêu: hiển thị đúng 1 trang 1440px vừa khít trong 900px màn hình thực tế — y chang cách Figma render canvas của nó.</p>
+      <p>Bây giờ, khi bạn nhấn <code>Ctrl +</code>, trình duyệt Chrome/Firefox làm điều này:</p>
+      <ol>
+        <li>Zoom toàn bộ trang lên (ví dụ 125%)</li>
+        <li>Hệ quả: <code>window.innerWidth</code> thu nhỏ lại (vì mỗi CSS pixel nay chiếm nhiều điểm ảnh màn hình hơn) — ví dụ từ 900px → 720px</li>
+        <li>Trình duyệt kích hoạt sự kiện <code>resize</code></li>
+        <li>Demo đang lắng nghe: <code>window.addEventListener('resize', _dmResize)</code></li>
+        <li><code>_dmResize</code> chạy lại <code>dmSetVP()</code>, tính lại scale: <code>720 / 1440 = 0.5</code> (nhỏ hơn trước)</li>
+        <li>Transform scale giảm → <strong>triệt tiêu đúng bằng lượng zoom đã tăng</strong></li>
+      </ol>
+
+      <p>Kết quả cuối cùng: font size nhìn thấy trên màn hình <em>không đổi</em>. Không phải vì ai cố tình khoá zoom — mà vì cơ chế responsive scaling tự động chống lại zoom như một <strong>phản xạ không chủ đích</strong>.</p>
+
+      <div class="callout info" style="margin:20px 0;">
+        <div class="callout-icon">🔍</div>
+        <p>Đây không phải <code>user-scalable=no</code> hay bất kỳ lệnh "khoá zoom" nào. Chỉ là resize listener đang làm đúng nhiệm vụ của nó — và vô tình tạo ra hiệu ứng phụ này.</p>
+      </div>
+
+      <h3>Tại sao cơ chế này lại tồn tại?</h3>
+      <p>Demo được thiết kế để trả lời câu hỏi: <em>"1440px trông như thế nào?"</em> — không phải <em>"chữ nhỏ to bao nhiêu?"</em>. Khi bạn bấm nút <strong>1280 / 1440 / 1920</strong>, đó là "zoom" đúng nghĩa của demo này: thay đổi viewport simulation để xem typography scale theo breakpoint.</p>
+
+      <hr>
+
+      <h2>Góc nhìn UX/UI — Đây có phải vấn đề không?</h2>
+
+      <h3>WCAG 1.4.4 — Tiêu chuẩn quốc tế về resize text</h3>
+      <p>W3C Web Content Accessibility Guidelines (WCAG) 2.1 có một tiêu chí rất rõ ràng:</p>
+
+      <div class="verdict" style="margin:20px 0;">
+        <div class="verdict-title">WCAG 1.4.4 — Resize Text (Level AA)</div>
+        <p style="margin:0;">"Ngoại trừ phụ đề và hình ảnh chứa text, text có thể được resize lên đến 200% mà không mất nội dung hay chức năng."</p>
+      </div>
+
+      <p>Theo tiêu chuẩn này, một trang web production <strong>bắt buộc</strong> phải cho phép người dùng phóng to chữ. Lý do rất thực tế: người dùng lớn tuổi, người có thị lực kém, người dùng màn hình nhỏ — họ phụ thuộc vào tính năng này hàng ngày.</p>
+
+      <h3>Nhưng Typography Demo có phải "trang web production" không?</h3>
+      <p>Đây là điểm mấu chốt. Hãy so sánh hai loại ngữ cảnh:</p>
+
+      <table class="compare-table">
+        <thead><tr><th>Tiêu chí</th><th>Production Web (cần WCAG)</th><th>Design Preview Tool (như demo này)</th></tr></thead>
+        <tbody>
+          <tr><td>Mục đích</td><td>Người dùng cuối đọc nội dung thật</td><td>Designer/Dev xem preview chính xác</td></tr>
+          <tr><td>Người dùng</td><td>Công chúng, bao gồm người khuyết tật</td><td>Nội bộ team, có kiến thức kỹ thuật</td></tr>
+          <tr><td>Nội dung</td><td>Thông tin thực, cần đọc được</td><td>Sample text minh họa typography</td></tr>
+          <tr><td>Zoom có ý nghĩa không?</td><td>Có — quan trọng với accessibility</td><td>Không — breakpoint buttons thay thế</td></tr>
+          <tr><td>Figma có bị WCAG không?</td><td>—</td><td>Không, vì là design tool</td></tr>
+          <tr><td>Kết luận</td><td>Phải cho zoom, dùng rem/em</td><td>Acceptable, nhưng nên có note UX</td></tr>
+        </tbody>
+      </table>
+
+      <p>Typography Demo giống Figma canvas hơn là một trang web thông thường. Không ai phàn nàn Figma không zoom được bằng Ctrl+ vì bạn dùng nút zoom của Figma. Tương tự, demo này có nút breakpoint thay cho zoom.</p>
+
+      <h3>Khách hàng có khó chịu không?</h3>
+      <p>Phụ thuộc vào ai là "khách hàng":</p>
+
+      <div class="score-grid">
+        <div class="score-card pro">
+          <h4>✓ Không gây khó chịu khi</h4>
+          <ul>
+            <li>Người dùng là designer/dev hiểu ngữ cảnh preview</li>
+            <li>Có nút 1280/1440/1920 rõ ràng như alternative</li>
+            <li>Nội dung là sample text, không phải thông tin cần đọc</li>
+            <li>Demo chạy trong internal tool, không phải public website</li>
+          </ul>
+        </div>
+        <div class="score-card con">
+          <h4>✗ Gây khó chịu khi</h4>
+          <ul>
+            <li>Demo được share với stakeholder/PM không rành kỹ thuật</li>
+            <li>Họ thấy text quá nhỏ và muốn phóng to để đọc</li>
+            <li>Không có chú thích giải thích tại sao Ctrl+ không hoạt động</li>
+            <li>Người dùng quen web thông thường → sẽ thấy "lạ"</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr>
+
+      <h2>Lịch sử: từ px → rem → clamp() — Ngành đã đi con đường nào?</h2>
+
+      <h3>Giai đoạn 1 — Pixel tuyệt đối (2000–2012)</h3>
+      <p>Tất cả font size đều dùng <code>px</code>. Ctrl+ zoom hoạt động ở IE6 bằng cách phóng to toàn trang (layout zoom). Không ai nghĩ nhiều đến accessibility.</p>
+
+      <h3>Giai đoạn 2 — em và rem (2012–2018)</h3>
+      <p>Cộng đồng phát hiện ra: nếu dùng <code>rem</code> thay vì <code>px</code>, font size tự động scale theo cài đặt font của trình duyệt (thường là 16px baseline). Người dùng có thể vào Settings → Font Size → tăng lên và toàn bộ web tự điều chỉnh — không cần Ctrl+.</p>
+      <div class="code-block"><pre><span class="cm">/* Cách cũ — px cứng, không scale với user preference */</span>
+<span class="ck">body</span> { <span class="cv">font-size: 16px</span>; }
+<span class="ck">h1</span>   { <span class="cv">font-size: 32px</span>; }
+
+<span class="cm">/* Cách đúng — rem scale theo browser base font */</span>
+<span class="ck">:root</span> { <span class="cv">font-size: 100%</span>; }   <span class="cm">/* = 16px theo browser default */</span>
+<span class="ck">body</span>  { <span class="cv">font-size: 1rem</span>; }   <span class="cm">/* 16px */</span>
+<span class="ck">h1</span>    { <span class="cv">font-size: 2rem</span>; }   <span class="cm">/* 32px, nhưng scale nếu user tăng base */</span></pre></div>
+
+      <h3>Giai đoạn 3 — Fluid typography với clamp() (2020–nay)</h3>
+      <p>Đây là tiêu chuẩn hiện đại nhất. Thay vì step-breakpoints (<em>"tại 1440px thì dùng 14px"</em>), font size trượt mượt theo viewport width:</p>
+      <div class="code-block"><pre><span class="cm">/* Font size tự chạy từ 13px (tại 1280px) đến 16px (tại 1920px) — không cần @media */</span>
+<span class="ck">body</span> {
+  <span class="cv">font-size: clamp(0.8125rem, 0.489rem + 0.508vw, 1rem)</span>;
+  <span class="cm">/*          min         fluid           max        */</span>
+}</pre></div>
+      <p>Ưu điểm: không có "điểm gãy", không cần breakpoint cứng, scale mượt hoàn toàn. Nhược điểm: khó kiểm soát và debug hơn, không phù hợp với design system dùng fixed token scale.</p>
+
+      <h3>Tiêu chuẩn 2024: dùng gì?</h3>
+      <table class="compare-table">
+        <thead><tr><th>Đơn vị</th><th>Dùng ở đâu</th><th>Ctrl+ zoom</th><th>User pref scaling</th></tr></thead>
+        <tbody>
+          <tr><td><code>px</code></td><td>Border, shadow, spacing cụ thể</td><td>✓ (layout zoom)</td><td>✗</td></tr>
+          <tr><td><code>rem</code></td><td>Font size production content</td><td>✓</td><td>✓ ← tốt nhất</td></tr>
+          <tr><td><code>em</code></td><td>Font size tương đối trong component</td><td>✓</td><td>✓</td></tr>
+          <tr><td><code>clamp()</code></td><td>Fluid display/heading text</td><td>✓</td><td>✓</td></tr>
+          <tr><td><code>px</code> + <code>transform: scale()</code></td><td>Design preview, canvas tools</td><td>✗ (intentional)</td><td>✗ (acceptable)</td></tr>
+        </tbody>
+      </table>
+
+      <hr>
+
+      <h2>Vậy Typography Demo làm đúng hay sai?</h2>
+
+      <div class="verdict">
+        <div class="verdict-title">Verdict — Đúng ngữ cảnh, nhưng cần 1 cải tiến nhỏ</div>
+        <p>Dùng <code>transform: scale()</code> với <code>px</code> cho một <strong>design preview tool</strong> là hoàn toàn đúng — đây là cách Figma, Storybook, và mọi design canvas hoạt động. Mục tiêu là "xem chính xác pixel" chứ không phải "content cần đọc".</p>
+        <p style="margin-top:12px; margin-bottom:0;">Điều duy nhất nên bổ sung: <strong>một dòng chú thích</strong> trong topbar của demo giải thích rằng nút 1280/1440/1920 là cách "zoom" đúng trong ngữ cảnh này — giúp stakeholder không rành kỹ thuật không bị bối rối.</p>
+      </div>
+
+      <h3 style="margin-top:32px;">CSS export thì sao? — Đây mới là quan trọng</h3>
+      <p>Demo dùng <code>px</code> là ổn. Nhưng file <code>tokens.css</code> được export ra cho developer thì hiện đang dùng <code>px</code>:</p>
+      <div class="code-block"><pre><span class="ck">:root</span> { <span class="ck">--size-base</span>: <span class="cv">13px</span>; }</pre></div>
+      <p>Nếu muốn đạt WCAG 1.4.4 trong <em>production app</em>, developer nên convert sang <code>rem</code> khi dùng:</p>
+      <div class="code-block"><pre><span class="cm">/* Trong component CSS */</span>
+<span class="ck">body</span> { <span class="cv">font-size: calc(var(--size-base) / 16 * 1rem)</span>; }
+<span class="cm">/* Hoặc đơn giản hơn: dùng rem native từ đầu trong production */</span></pre></div>
+      <p>Đây là quyết định của developer, không phải của plugin — plugin đúng khi export <code>px</code> vì đó là giá trị design token gốc.</p>
+
+      <p style="margin-top:28px; color:var(--gray-500); font-size:14px;"><em>Bài viết dựa trên WCAG 2.1 (W3C, 2018), Chrome/Firefox behavior tại 04/2026, và source code thực tế của Typography DS plugin.</em></p>
+
+    </div><!-- /article-a02 -->
     <!-- BLOG_ARTICLES_END — thêm article div mới TRƯỚC dòng này. Xem BLOG.md để biết cách. -->
 
   </div><!-- /blog-content -->
