@@ -341,6 +341,86 @@
   }
   .blog-nav-back:hover { color: #9090d0; }
 
+  /* Help button + modal */
+  .blog-help-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #1e1e30; border: 1px solid #3a3a5a;
+    color: #6060a0; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all .15s; flex-shrink: 0;
+    line-height: 1;
+  }
+  .blog-help-btn:hover { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+
+  #blog-help-modal {
+    display: none; position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  #blog-help-modal.open { display: flex; }
+  .bhm-box {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 680px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 24px 80px rgba(0,0,0,.35);
+  }
+  .bhm-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 28px 20px; border-bottom: 1px solid var(--gray-200);
+    position: sticky; top: 0; background: #fff; z-index: 1;
+    border-radius: 16px 16px 0 0;
+  }
+  .bhm-header h2 { font-size: 18px; font-weight: 700; color: var(--gray-900); margin: 0; }
+  .bhm-close {
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: var(--gray-100); color: var(--gray-500);
+    font-size: 18px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; transition: background .15s; flex-shrink: 0;
+  }
+  .bhm-close:hover { background: var(--gray-200); color: var(--gray-800); }
+  .bhm-body { padding: 28px; }
+  .bhm-section { margin-bottom: 32px; }
+  .bhm-section:last-child { margin-bottom: 0; }
+  .bhm-section-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--indigo); color: #fff;
+    font-size: 13px; font-weight: 700; flex-shrink: 0; margin-right: 8px;
+  }
+  .bhm-section h3 {
+    display: flex; align-items: center;
+    font-size: 15px; font-weight: 700; color: var(--gray-900); margin-bottom: 14px;
+  }
+  .bhm-section p { font-size: 14px; line-height: 1.7; color: var(--gray-700); margin-bottom: 10px; }
+  .bhm-section p:last-child { margin-bottom: 0; }
+  .bhm-section ul { padding-left: 20px; margin-bottom: 10px; }
+  .bhm-section li { font-size: 14px; line-height: 1.7; color: var(--gray-700); margin-bottom: 4px; }
+  .bhm-code {
+    background: var(--gray-900); color: #e2e8f0;
+    border-radius: 8px; padding: 14px 18px;
+    font-family: 'Courier New', monospace; font-size: 13px;
+    line-height: 1.6; margin: 10px 0; overflow-x: auto;
+  }
+  .bhm-code .c-green { color: #86efac; }
+  .bhm-code .c-blue  { color: #7dd3fc; }
+  .bhm-code .c-gray  { color: #64748b; }
+  .bhm-prompt {
+    background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px;
+    padding: 14px 18px; margin: 10px 0;
+  }
+  .bhm-prompt .prompt-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+    color: var(--indigo); margin-bottom: 6px; display: block;
+  }
+  .bhm-prompt .prompt-text {
+    font-size: 14px; color: var(--gray-800); font-weight: 500; line-height: 1.5;
+  }
+  .bhm-tip {
+    background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
+    padding: 12px 16px; margin-top: 10px;
+    font-size: 13px; color: #166534; line-height: 1.6;
+  }
+  .bhm-divider { border: none; border-top: 1px solid var(--gray-200); margin: 28px 0; }
+
   .blog-content {
     flex: 1; min-width: 0; max-width: 820px;
     padding: 60px 64px; background: #fff;
@@ -1669,9 +1749,12 @@
   <!-- Blog Sidebar -->
   <nav class="blog-sidebar">
     <div class="blog-sidebar-header">
-      <div class="blog-logo">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h10M2 7h7M2 11h5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
-        Đánh giá &amp; Phân tích
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+        <div class="blog-logo">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h10M2 7h7M2 11h5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Đánh giá &amp; Phân tích
+        </div>
+        <button class="blog-help-btn" onclick="toggleBlogHelp()" title="Hướng dẫn sử dụng blog">?</button>
       </div>
       <span class="blog-sub">Góc nhìn chuyên gia về Typography DS</span>
     </div>
@@ -1834,6 +1917,98 @@
 
   </div><!-- /blog-content -->
 </div><!-- /blog-layout -->
+
+<!-- Blog Help Modal -->
+<div id="blog-help-modal" onclick="if(event.target===this) toggleBlogHelp()">
+  <div class="bhm-box">
+    <div class="bhm-header">
+      <h2>Hướng dẫn sử dụng Blog</h2>
+      <button class="bhm-close" onclick="toggleBlogHelp()">×</button>
+    </div>
+    <div class="bhm-body">
+
+      <!-- Section 1 -->
+      <div class="bhm-section">
+        <h3><span class="bhm-section-num">1</span>Mang blog này sang project mới</h3>
+        <p>Toàn bộ blog là một panel tự chứa trong <code>help.html</code>. Để tái sử dụng ở project khác:</p>
+        <ul>
+          <li>Copy file <code>help.html</code> sang project mới (hoặc tạo file mới từ template)</li>
+          <li>Copy file <code>BLOG.md</code> vào cùng thư mục — đây là "bộ nhớ" để Claude hiểu cách thêm bài</li>
+          <li>Mở Claude Code trong project mới và nói:</li>
+        </ul>
+        <div class="bhm-prompt">
+          <span class="prompt-label">Prompt để khởi động blog ở project mới</span>
+          <span class="prompt-text">"Đọc BLOG.md để hiểu cách thêm bài blog vào help.html, sau đó thêm bài đầu tiên về [chủ đề]"</span>
+        </div>
+        <p>Claude sẽ đọc <code>BLOG.md</code>, hiểu cấu trúc anchor <code>BLOG_NAV_END</code> / <code>BLOG_ARTICLES_END</code>, và tự thêm đúng vị trí — không cần giải thích thêm.</p>
+        <div class="bhm-tip">
+          💡 CSS blog được đặt trong block <code>/* ═══ Blog Panel ═══ */</code> trong <code>&lt;style&gt;</code> — dễ tách ra nếu muốn dùng riêng.
+        </div>
+      </div>
+
+      <hr class="bhm-divider">
+
+      <!-- Section 2 -->
+      <div class="bhm-section">
+        <h3><span class="bhm-section-num">2</span>Thêm bài mới ở project này</h3>
+        <p>Nói với Claude Code theo cú pháp sau:</p>
+        <div class="bhm-prompt">
+          <span class="prompt-label">Cú pháp cơ bản</span>
+          <span class="prompt-text">"Thêm bài blog mới vào help.html, chủ đề: [X], nội dung: [Y]"</span>
+        </div>
+        <p>Ví dụ cụ thể:</p>
+        <div class="bhm-code"><span class="c-gray"># Bài phân tích ngắn</span>
+<span class="c-green">"Thêm bài blog về roadmap plugin, nội dung: 3 phases tiếp theo với ưu tiên"</span>
+
+<span class="c-gray"># Bài có cấu trúc rõ</span>
+<span class="c-green">"Thêm bài blog case study: Typography DS trong dự án thực tế,
+ dùng compare-table và verdict callout"</span>
+
+<span class="c-gray"># Bài kỹ thuật</span>
+<span class="c-green">"Thêm bài blog giải thích cơ chế auto-assign styles,
+ dành cho developer muốn hiểu code"</span></div>
+        <p>Claude sẽ tự chọn ID tiếp theo (<code>a02</code>, <code>a03</code>...), chèn đúng vị trí anchor, và dùng CSS classes phù hợp.</p>
+      </div>
+
+      <hr class="bhm-divider">
+
+      <!-- Section 3 -->
+      <div class="bhm-section">
+        <h3><span class="bhm-section-num">3</span>Mẹo để ra lệnh hiệu quả hơn</h3>
+        <p>Bài viết sẽ tốt hơn khi bạn chỉ định thêm một số yếu tố:</p>
+
+        <p><strong>Chỉ định giọng văn:</strong></p>
+        <div class="bhm-code"><span class="c-blue">"... giọng chuyên gia UX/UI"</span>  <span class="c-gray">← phân tích sâu, thuật ngữ ngành</span>
+<span class="c-blue">"... giọng thực tế, dùng ví dụ cụ thể"</span>  <span class="c-gray">← dễ đọc, bớt hàn lâm</span>
+<span class="c-blue">"... dành cho developer"</span>  <span class="c-gray">← tập trung kỹ thuật, code snippets</span></div>
+
+        <p><strong>Chỉ định cấu trúc bài:</strong></p>
+        <div class="bhm-code"><span class="c-blue">"... có bảng so sánh"</span>         <span class="c-gray">← dùng .compare-table</span>
+<span class="c-blue">"... có điểm mạnh/yếu"</span>        <span class="c-gray">← dùng .score-card.pro/.con</span>
+<span class="c-blue">"... có rating priorities"</span>    <span class="c-gray">← dùng .rating-row</span>
+<span class="c-blue">"... kết thúc bằng verdict"</span>   <span class="c-gray">← dùng .verdict callout</span>
+<span class="c-blue">"... bài ngắn, chỉ 3 điểm chính"</span>  <span class="c-gray">← không cần đủ components</span></div>
+
+        <p><strong>Cung cấp outline trước:</strong></p>
+        <div class="bhm-code"><span class="c-green">"Thêm bài blog, chủ đề: Tại sao không dùng Tokens Studio,
+nội dung:
+- Tokens Studio quá phức tạp cho team nhỏ
+- Setup mất 2 ngày vs Typography DS 30 phút
+- Không cần GitHub sync nếu chỉ 1 file Figma
+- Khi nào nên dùng Tokens Studio thay thế"</span></div>
+
+        <div class="bhm-tip">
+          💡 Outline càng cụ thể → bài viết càng sát ý bạn. Không cần outline thì Claude sẽ tự suy luận từ chủ đề — kết quả vẫn tốt nhưng có thể cần chỉnh thêm.
+        </div>
+
+        <p style="margin-top:16px;"><strong>Chỉnh sửa sau khi thêm:</strong></p>
+        <p>Nếu bài vừa tạo cần sửa nội dung, nói: <em>"Sửa bài a02 trong help.html: [cần sửa gì]"</em>. Claude biết cấu trúc nên tìm đúng div cần sửa.</p>
+      </div>
+
+    </div><!-- /bhm-body -->
+  </div><!-- /bhm-box -->
+</div><!-- /blog-help-modal -->
+
 </div><!-- /blog-panel -->
 
 <!-- ─── Demo Panel ─── -->
@@ -2191,6 +2366,10 @@
   updateNav();
 
   // ── Blog Panel ─────────────────────────────────────────────────
+  function toggleBlogHelp() {
+    document.getElementById('blog-help-modal').classList.toggle('open');
+  }
+
   function showBlog() {
     document.getElementById('main-content').style.display = 'none';
     document.getElementById('demo-panel').style.display = 'none';
